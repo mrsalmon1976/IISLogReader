@@ -71,7 +71,7 @@ namespace Test.IISLogReader.Modules
 
             // assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            response.Body["#returnUrl"]
+            response.Body["#returnurl"]
                 .ShouldExistOnce()
                 .And.ShouldContainAttribute("value", Actions.Dashboard.Default);
         }
@@ -86,13 +86,13 @@ namespace Test.IISLogReader.Modules
             var response = browser.Get(Actions.Login.Default, (with) =>
             {
                 with.HttpRequest();
-                with.Query("returnUrl", "/test");
+                with.Query("returnurl", "/test");
                 //with.FormsAuth(Guid.NewGuid(), new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
             });
 
             // assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            response.Body["#returnUrl"]
+            response.Body["#returnurl"]
                 .ShouldExistOnce()
                 .And.ShouldContainAttribute("value", "/test");
         }

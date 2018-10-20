@@ -19,6 +19,7 @@ using AutoMapper;
 using IISLogReader.BLL.Data.Models;
 using IISLogReader.ViewModels.User;
 using System.Diagnostics;
+using IISLogReader.BLL.Data;
 
 namespace IISLogReader
 {
@@ -49,6 +50,9 @@ namespace IISLogReader
                 cfg.CreateMap<UserViewModel, UserModel>();//.ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.DocumentId));
             });
 
+            // DbContext - initialise now
+            InitialiseDatabase(container);
+
             // set up the stores
             var dataPath = Path.Combine(this.RootPathProvider.GetRootPath(), "Data");
             var userStorePath = Path.Combine(dataPath, "users.json");
@@ -74,6 +78,13 @@ namespace IISLogReader
             // WebConsole classes and controllers
             container.Register<IUserMapper, UserMapper>();
 
+        }
+
+        private void InitialiseDatabase(TinyIoCContainer container)
+        {
+            string dbPath = Path.Combine(AppContext.BaseDirectory, "IISLogReader.db");
+            container.Register<IDbContext>((c, o) => new SQLiteDbContext(dbPath));
+            container.Resolve<IDbContext>().Initialise();
         }
 
         protected override void RequestStartup(TinyIoCContainer container, IPipelines pipelines, NancyContext context)
