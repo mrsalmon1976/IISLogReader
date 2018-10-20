@@ -5,19 +5,17 @@
     Layout = "Views/Layouts/MainLayout.cshtml";
     ViewBag.Title = "IISLogReader :: Users";
 }
-<!-- Tools -->
-<section id="tools">
-    <ul class="breadcrumb" id="breadcrumb">
-        <li class="title">Users</li>
-    </ul>
-    <div id="toolbar">
-        <div class="btn-group">
-            <a id="btn-add-user" class="btn" data-toggle="toolbar-tooltip" href="#" title="" data-original-title="">
-                <i class="fa fa-plus"></i>
-            </a>
-        </div>
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header">Users</h1>
     </div>
-</section>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        <button id="btn-add-user" class="btn btn-success btn-custom-padded"><i class="fa fa-plus-circle"></i> New user</button>
+    </div>
+</div>
+<br />
 <!-- Content -->
 <div id="content">
     <div id="pnl-loading">
@@ -32,7 +30,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span></button>
+                    <span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">Add user</h4>
             </div>
             <div class="modal-body">
@@ -68,7 +67,7 @@
                             </select>
                         </div>
                     </div>
-                </form>                    
+                </form>
             </div>
             <div class="modal-footer">
                 <i id="user-spinner" class="hide fa fa-circle-o-notch fa-spin fa-lg fa-fw pull-right"></i>

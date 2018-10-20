@@ -1,0 +1,22 @@
+﻿@using IISLogReader.Navigation
+@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<dynamic>
+@{ 
+    var currentPath = Request.Url.Path;
+}
+<div class="row">
+    <ol class="breadcrumb">
+        <li>
+            <a href="/">
+                <em class="fa fa-home"></em>
+            </a>
+        </li>
+        @if (currentPath.StartsWith(Actions.Dashboard.Default))
+        {
+            <li class="active">Dashboard</li>
+        }
+        @if (currentPath.StartsWith(Actions.User.Default))
+        {
+            <li class="active">Users</li>
+        }
+    </ol>
+</div><!--/.row-->

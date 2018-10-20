@@ -57,6 +57,12 @@ namespace IISLogReader
             userStore.Load();
             container.Register<IUserStore>(userStore);
 
+            // add "Shared" folder for views
+            this.Conventions.ViewLocationConventions.Add((viewName, model, context) =>
+            {
+                return string.Concat("Views/Shared/", viewName);
+            });
+
         }
 
         protected override void ConfigureRequestContainer(TinyIoCContainer container, NancyContext context)
