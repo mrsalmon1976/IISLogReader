@@ -47,6 +47,9 @@
     <Reference Include="BouncyCastle.Crypto, Version=1.8.3.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
       <HintPath>..\packages\BouncyCastle.1.8.3.1\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
+    <Reference Include="Dapper, Version=1.50.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.50.5\lib\net451\Dapper.dll</HintPath>
+    </Reference>
     <Reference Include="DnsClient, Version=1.2.0.0, Culture=neutral, PublicKeyToken=4574bb5573c51424, processorArchitecture=MSIL">
       <HintPath>..\packages\DnsClient.1.2.0\lib\net45\DnsClient.dll</HintPath>
     </Reference>
@@ -130,16 +133,21 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BLL\Commands\Project\CreateProjectCommand.cs" />
     <Compile Include="BLL\Data\Db\DbContext.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContext.cs" />
+    <Compile Include="BLL\Data\Models\ProjectModel.cs" />
     <Compile Include="BLL\Data\Models\UserModel.cs" />
+    <Compile Include="BLL\Data\Repositories\ProjectRepository.cs" />
     <Compile Include="BLL\Data\Stores\UserStore.cs" />
+    <Compile Include="BLL\Exceptions\ValidationException.cs" />
     <Compile Include="BLL\Security\Claims.cs" />
     <Compile Include="BLL\Security\EncryptionProvider.cs" />
     <Compile Include="BLL\Security\PasswordProvider.cs" />
     <Compile Include="BLL\Security\Roles.cs" />
     <Compile Include="BLL\Security\UserIdentity.cs" />
     <Compile Include="BLL\Utils\ParsedAssemblyQualifiedName.cs" />
+    <Compile Include="BLL\Validators\ProjectValidator.cs" />
     <Compile Include="BLL\Validators\UserValidator.cs" />
     <Compile Include="BLL\Validators\ValidationResult.cs" />
     <Compile Include="Configuration\AppSettings.cs" />
@@ -147,6 +155,7 @@
     <Compile Include="Modules\DefaultModule.cs" />
     <Compile Include="Modules\DefaultSecureModule.cs" />
     <Compile Include="Modules\DashboardModule.cs" />
+    <Compile Include="Modules\ProjectModule.cs" />
     <Compile Include="Modules\LoginModule.cs" />
     <Compile Include="Modules\UserModule.cs" />
     <Compile Include="Navigation\Actions.cs" />
@@ -157,6 +166,7 @@
     <Compile Include="ViewModels\Dashboard\DashboardViewModel.cs" />
     <Compile Include="ViewModels\Login\LoginViewModel.cs" />
     <Compile Include="ViewModels\MultiSelectItem.cs" />
+    <Compile Include="ViewModels\Project\ProjectViewModel.cs" />
     <Compile Include="ViewModels\User\UserListViewModel.cs" />
     <Compile Include="ViewModels\User\UserViewModel.cs" />
     <Compile Include="WebConsoleBootstrapper.cs" />
@@ -229,6 +239,9 @@
     <Content Include="Content\Css\dropzone.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Css\dropzone.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Css\font-awesome.min.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -260,6 +273,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Js\bootstrap.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Js\dropzone.min.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Js\jquery-ui.min.js">

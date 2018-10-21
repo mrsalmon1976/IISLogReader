@@ -14,6 +14,7 @@ namespace IISLogReader.BLL.Security
             { 
                 ConnectionAdd, 
                 ConnectionDelete,
+                ProjectSave,
                 UserAdd,
                 UserDelete,
                 UserList
@@ -29,6 +30,8 @@ namespace IISLogReader.BLL.Security
         public const string UserDelete = "UserDelete";
 
         public const string UserList = "UserList";
+
+        public const string ProjectSave = "ProjectSave";
 
         public static IReadOnlyList<string> AllClaims { get; private set; }
     }

@@ -28,12 +28,7 @@ namespace Test.IISLogReader.BLL.Data.Db
             _dbContext.Dispose();
 
             // delete all .db files (in case previous tests have failed)
-            string[] files = Directory.GetFiles(AppContext.BaseDirectory, "_test_*.db");
-            foreach (string f in files)
-            {
-                File.Delete(f);
-                Console.WriteLine("Deleted file {0}", f);
-            }
+            TestHelper.DeleteTestFiles(AppContext.BaseDirectory, "_test_*.db");
         }
 
         #region Initalise Tests
@@ -49,7 +44,7 @@ namespace Test.IISLogReader.BLL.Data.Db
         public void Initialise_CreatesTable_Projects()
         {
             _dbContext.Initialise();
-            const string sql = "SELECT * FROM projects";
+            const string sql = "SELECT * FROM Projects";
             _dbContext.ExecuteNonQuery(sql);
 
             Assert.IsTrue(File.Exists(_filePath));
@@ -59,7 +54,7 @@ namespace Test.IISLogReader.BLL.Data.Db
         public void Initialise_CreatesTable_LogFiles()
         {
             _dbContext.Initialise();
-            const string sql = "SELECT * FROM log_files";
+            const string sql = "SELECT * FROM LogFiles";
             _dbContext.ExecuteNonQuery(sql);
 
             Assert.IsTrue(File.Exists(_filePath));
@@ -69,7 +64,7 @@ namespace Test.IISLogReader.BLL.Data.Db
         public void Initialise_CreatesTable_Requests()
         {
             _dbContext.Initialise();
-            const string sql = "SELECT * FROM requests";
+            const string sql = "SELECT * FROM Requests";
             _dbContext.ExecuteNonQuery(sql);
 
             Assert.IsTrue(File.Exists(_filePath));

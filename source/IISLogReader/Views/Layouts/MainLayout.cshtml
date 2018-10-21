@@ -1,5 +1,5 @@
-﻿@{ 
-    // https://medialoot.com/preview/frame/lumino.html 
+﻿@{
+    // https://medialoot.com/preview/frame/lumino.html
 }}
 @using Nancy.Security
 @using IISLogReader.BLL.Utils
@@ -7,6 +7,7 @@
 @using System.Linq
 @using IISLogReader.Navigation
 @using IISLogReader.BLL.Security
+@using IISLogReader.BLL.Data.Models
 @functions {
     public string MenuActiveClass(string title)
     {
@@ -15,6 +16,7 @@
 }
 @{
     List<string> currentUserClaims = ViewBag.Claims;
+    List<ProjectModel> projects = ViewBag.Projects;
     string currentUserName = ViewBag.CurrentUserName;
 }
 <!DOCTYPE html>
@@ -61,28 +63,25 @@
         <div class="divider"></div>
         <ul class="nav menu">
             <li class="@(MenuActiveClass("Dashboard"))"><a href="@Actions.Dashboard.Default"><em class="fa fa-dashboard">&nbsp;</em> Dashboard</a></li>
-            <li class="parent ">
-                <a data-toggle="collapse" href="#sub-item-1">
-                    <em class="fa fa-navicon">&nbsp;</em> Projects <span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
-                </a>
-                <ul class="children collapse" id="sub-item-1">
-                    <li>
-                        <a class="" href="#">
-                            <span class="fa fa-arrow-right">&nbsp;</span> Sub Item 1
-                        </a>
-                    </li>
-                    <li>
-                        <a class="" href="#">
-                            <span class="fa fa-arrow-right">&nbsp;</span> Sub Item 2
-                        </a>
-                    </li>
-                    <li>
-                        <a class="" href="#">
-                            <span class="fa fa-arrow-right">&nbsp;</span> Sub Item 3
-                        </a>
-                    </li>
-                </ul>
-            </li>
+            @if (projects.Count > 0)
+            { 
+                <li class="parent ">
+                    <a data-toggle="collapse" href="#project-menu-items">
+                        <em class="fa fa-navicon">&nbsp;</em> Projects 
+                        <span data-toggle="collapse" href="#project-menu-items" class="icon pull-right menu-toggle"><em class="fa fa-plus fa-minus"></em></span>
+                    </a>
+                    <ul class="children collapse in" id="project-menu-items">
+                        @foreach (var pm in projects)
+                        {
+                            <li>
+                                <a class="" href="#">
+                                    <span class="fa fa-arrow-right">&nbsp;</span> @pm.Name
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
             @if (currentUserClaims.Contains(Claims.UserList) || currentUserClaims.Contains(Claims.UserAdd))
             {
                 <li class="@(MenuActiveClass("Users"))">

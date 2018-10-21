@@ -141,15 +141,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />
     <Compile Include="BLL\Data\Stores\UserStoreTest.cs" />
+    <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />
+    <Compile Include="BLL\Validators\ProjectValidatorTest.cs" />
     <Compile Include="BLL\Validators\UserValidatorTest.cs" />
     <Compile Include="DataHelper.cs" />
+    <Compile Include="Modules\ProjectModuleTest.cs" />
     <Compile Include="Modules\UserModuleTest.cs" />
     <Compile Include="Modules\LoginModuleTest.cs" />
     <Compile Include="Modules\ModuleTestBootstrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />

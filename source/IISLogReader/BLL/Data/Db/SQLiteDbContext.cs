@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Dapper;
 
 namespace IISLogReader.BLL.Data
 {
@@ -24,12 +25,44 @@ namespace IISLogReader.BLL.Data
             _conn.Open();
         }
 
+        /// <summary>
+        /// Begins a new transaction (if supported by the DbContext)
+        /// </summary>
+        public override void BeginTransaction()
+        {
+            this.Transaction = _conn.BeginTransaction();
+        }
+
+        /// <summary>
+        /// Commits the current transaction (if supported by the DbContext)
+        /// </summary>
+        public override void Commit()
+        {
+            if (this.Transaction == null)
+            {
+                throw new InvalidOperationException("Transaction has not been started");
+            }
+            this.Transaction.Commit();
+        }
+
         public override void Dispose()
         {
             if (_conn != null)
             {
                 _conn.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Executes a query and maps the result to a strongly typed list.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        public override IEnumerable<T> Query<T>(string sql, object param = null)
+        {
+            return _conn.Query<T>(sql, param, this.Transaction);
         }
 
         /// <summary>
@@ -44,6 +77,26 @@ namespace IISLogReader.BLL.Data
                 cmd.Parameters.AddRange(dbParameters);
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        /// <summary>
+        /// Executes a query against the database
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        public override T ExecuteScalar<T>(string sql, object param = null)
+        {
+            return _conn.ExecuteScalar<T>(sql, param, this.Transaction);
+        }
+
+        /// <summary>
+        /// Executes a query against the database using Dapper to substitute model values.
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="param"></param>
+        public override void ExecuteNonQuery(string sql, object param)
+        {
+            _conn.Execute(sql, param, this.Transaction);
         }
 
         /// <summary>
@@ -62,5 +115,18 @@ namespace IISLogReader.BLL.Data
                 cmd.ExecuteNonQuery();
             }
         }
+
+        /// <summary>
+        /// Rolls back the current transaction (if supported by the DbContext)
+        /// </summary>
+        public override void Rollback()
+        {
+            if (this.Transaction == null)
+            {
+                throw new InvalidOperationException("Transaction has not been started");
+            }
+            this.Transaction.Rollback();
+        }
+
     }
 }

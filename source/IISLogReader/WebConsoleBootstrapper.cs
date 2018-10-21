@@ -20,6 +20,8 @@ using IISLogReader.BLL.Data.Models;
 using IISLogReader.ViewModels.User;
 using System.Diagnostics;
 using IISLogReader.BLL.Data;
+using IISLogReader.ViewModels.Project;
+using IISLogReader.BLL.Data.Repositories;
 
 namespace IISLogReader
 {
@@ -47,19 +49,21 @@ namespace IISLogReader
 
             // set up mappings
             Mapper.Initialize((cfg) => {
+                cfg.CreateMap<ProjectViewModel, ProjectModel>();
                 cfg.CreateMap<UserViewModel, UserModel>();//.ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.DocumentId));
             });
 
             // DbContext - initialise now
             InitialiseDatabase(container);
 
-            // set up the stores
+            // set up the repositories
             var dataPath = Path.Combine(this.RootPathProvider.GetRootPath(), "Data");
             var userStorePath = Path.Combine(dataPath, "users.json");
             
             IUserStore userStore = new UserStore(userStorePath, container.Resolve<IFileWrap>(), container.Resolve<IDirectoryWrap>(), container.Resolve<IPasswordProvider>());
             userStore.Load();
             container.Register<IUserStore>(userStore);
+            container.Register<IProjectRepository, ProjectRepository>();
 
             // add "Shared" folder for views
             this.Conventions.ViewLocationConventions.Add((viewName, model, context) =>
@@ -84,7 +88,10 @@ namespace IISLogReader
         {
             string dbPath = Path.Combine(AppContext.BaseDirectory, "IISLogReader.db");
             container.Register<IDbContext>((c, o) => new SQLiteDbContext(dbPath));
-            container.Resolve<IDbContext>().Initialise();
+            using (IDbContext dbc = container.Resolve<IDbContext>())
+            {
+                dbc.Initialise();
+            }
         }
 
         protected override void RequestStartup(TinyIoCContainer container, IPipelines pipelines, NancyContext context)
@@ -112,12 +119,22 @@ namespace IISLogReader
             {
                 if (ctx.CurrentUser != null)
                 {
+                    // set the current user name so it is available for the layout
                     ctx.ViewBag.CurrentUserName = ctx.CurrentUser.UserName;
                     if (ctx.CurrentUser.Claims != null)
                     {
                         ctx.ViewBag.Claims = new List<string>(ctx.CurrentUser.Claims);
                     }
+
+                    // load a list of projects
+                    using (IDbContext dbContext = container.Resolve<IDbContext>())
+                    {
+                        IProjectRepository projectRepo = container.Resolve<IProjectRepository>();
+                        ctx.ViewBag.Projects = projectRepo.GetAll(dbContext).ToList();
+                    }
+
                 }
+
                 return null;
             };
 

@@ -20,6 +20,11 @@ namespace IISLogReader.Navigation
             public const string Logout = "/logout";
         }
 
+        public class Project
+        {
+            public const string Save = "/project/save";
+        }
+
         public class User
         {
             public const string Default = "/user";
