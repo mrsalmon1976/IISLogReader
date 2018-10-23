@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 
 namespace IISLogReader.ViewModels.Project
 {
-    public class ProjectViewModel
+    /// <summary>
+    /// Viewmodel used for the creation of projects.
+    /// </summary>
+    public class ProjectFormViewModel
     {
-        public ProjectViewModel()
+        public ProjectFormViewModel()
         {
         }
 

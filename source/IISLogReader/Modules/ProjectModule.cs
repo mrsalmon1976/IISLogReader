@@ -19,6 +19,7 @@ using AutoMapper;
 using IISLogReader.BLL.Validators;
 using IISLogReader.BLL.Commands.Project;
 using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Data.Repositories;
 
 namespace IISLogReader.Modules
 {
@@ -28,16 +29,18 @@ namespace IISLogReader.Modules
         private IDbContext _dbContext;
         private IProjectValidator _projectValidator;
         private ICreateProjectCommand _createProjectCommand;
+        private IProjectRepository _projectRepo;
 
-        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand)
+        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand, IProjectRepository projectRepo)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
             _createProjectCommand = createProjectCommand;
+            _projectRepo = projectRepo;
 
-            Get["/"] = x =>
+            Get[Actions.Project.View] = x =>
             {
-                return this.Response.AsRedirect(Actions.Login.Default);
+                return ProjectView(x.projectId);
             };
 
             Post[Actions.Project.Save] = x =>
@@ -50,18 +53,41 @@ namespace IISLogReader.Modules
 
         public dynamic ProjectSave()
         {
-            ProjectViewModel model = this.Bind<ProjectViewModel>();
-            ProjectModel project = Mapper.Map<ProjectViewModel, ProjectModel>(model);
+            ProjectFormViewModel model = this.Bind<ProjectFormViewModel>();
+            ProjectModel project = Mapper.Map<ProjectFormViewModel, ProjectModel>(model);
 
             ValidationResult result = _projectValidator.Validate(project);
             if (result.Success)
             {
                 _dbContext.BeginTransaction();
-                _createProjectCommand.Execute(_dbContext, project);
+                _createProjectCommand.Execute(project);
                 _dbContext.Commit();
             }
 
             return this.Response.AsJson(result);
+        }
+
+        public dynamic ProjectView(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            // look up the project - return a 404 if we can't load it
+            ProjectModel project = _projectRepo.GetById(projectId);
+            if (project == null)
+            {
+                return HttpStatusCode.NotFound;
+            }
+
+            // set up the view model
+            ProjectViewViewModel viewModel = new ProjectViewViewModel();
+            viewModel.ProjectId = projectId;
+            viewModel.ProjectName = project.Name;
+            return Response.AsJson(viewModel);
         }
     }
 }

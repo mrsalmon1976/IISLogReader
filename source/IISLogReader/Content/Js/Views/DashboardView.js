@@ -38,7 +38,7 @@
                         that.showProjectValidationError(xhr.responseJSON.message);
                     }
                     catch (err) {
-                        that.showProjectValidationError('A fatal error occurred');
+                        that.showProjectValidationError('A fatal error occurred:' + (err === null ? 'Unknown' : err.message));
                     }
                 });
             },

@@ -20,14 +20,16 @@ namespace Test.IISLogReader.BLL.Commands
     {
         private ICreateProjectCommand _createProjectCommand;
 
+        private IDbContext _dbContext;
         private IProjectValidator _projectValidator;
 
         [SetUp]
         public void CreateProjectCommandTest_SetUp()
         {
+            _dbContext = Substitute.For<IDbContext>();
             _projectValidator = Substitute.For<IProjectValidator>();
 
-            _createProjectCommand = new CreateProjectCommand(_projectValidator);
+            _createProjectCommand = new CreateProjectCommand(_dbContext, _projectValidator);
         }
 
         [TearDown]
@@ -41,34 +43,32 @@ namespace Test.IISLogReader.BLL.Commands
         [Test]
         public void Execute_ValidationFails_ThrowsException()
         {
-            IDbContext dbContext = Substitute.For<IDbContext>();
             ProjectModel model = DataHelper.CreateProjectModel();
 
             _projectValidator.Validate(model).Returns(new ValidationResult("error"));
 
             // execute
-            TestDelegate del = () => _createProjectCommand.Execute(dbContext, model);
+            TestDelegate del = () => _createProjectCommand.Execute(model);
             
             // assert
             Assert.Throws<ValidationException>(del);
 
             // we shouldn't have even tried to do the insert
-            dbContext.DidNotReceive().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+            _dbContext.DidNotReceive().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
         }
 
         [Test]
         public void Execute_ValidationSucceeds_RecordInserted()
         {
-            IDbContext dbContext = Substitute.For<IDbContext>();
             ProjectModel model = DataHelper.CreateProjectModel();
 
             _projectValidator.Validate(model).Returns(new ValidationResult());
 
             // execute
-            _createProjectCommand.Execute(dbContext, model);
+            _createProjectCommand.Execute(model);
 
             // assert
-            dbContext.Received(1).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+            _dbContext.Received(1).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace Test.IISLogReader.BLL.Commands
                 ProjectModel project = DataHelper.CreateProjectModel();
 
                 IProjectValidator projectValidator = new ProjectValidator();
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(projectValidator);
-                ProjectModel savedProject = createProjectCommand.Execute(dbContext, project);
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, projectValidator);
+                ProjectModel savedProject = createProjectCommand.Execute(project);
 
                 Assert.Greater(savedProject.Id, 0);
 

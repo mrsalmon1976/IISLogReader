@@ -26,6 +26,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+	<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -166,7 +167,8 @@
     <Compile Include="ViewModels\Dashboard\DashboardViewModel.cs" />
     <Compile Include="ViewModels\Login\LoginViewModel.cs" />
     <Compile Include="ViewModels\MultiSelectItem.cs" />
-    <Compile Include="ViewModels\Project\ProjectViewModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectViewViewModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectFormViewModel.cs" />
     <Compile Include="ViewModels\User\UserListViewModel.cs" />
     <Compile Include="ViewModels\User\UserViewModel.cs" />
     <Compile Include="WebConsoleBootstrapper.cs" />

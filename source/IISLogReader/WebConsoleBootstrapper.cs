@@ -22,14 +22,20 @@ using System.Diagnostics;
 using IISLogReader.BLL.Data;
 using IISLogReader.ViewModels.Project;
 using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Commands.Project;
 
 namespace IISLogReader
 {
 
     public class WebConsoleBootstrapper : DefaultNancyBootstrapper
     {
+        private string _databasePath = "";
+
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines)
         {
+
+            // set the location of our database
+            _databasePath = Path.Combine(AppContext.BaseDirectory, "IISLogReader.db");
             // override maximum JSON length for Nancy
             Nancy.Json.JsonSettings.MaxJsonLength = int.MaxValue;
 
@@ -49,12 +55,16 @@ namespace IISLogReader
 
             // set up mappings
             Mapper.Initialize((cfg) => {
-                cfg.CreateMap<ProjectViewModel, ProjectModel>();
+                cfg.CreateMap<ProjectFormViewModel, ProjectModel>();
                 cfg.CreateMap<UserViewModel, UserModel>();//.ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.DocumentId));
             });
 
-            // DbContext - initialise now
-            InitialiseDatabase(container);
+            // Initialise the database only on application start
+            using (IDbContext dbc = new SQLiteDbContext(_databasePath))
+            {
+                dbc.Initialise();
+            }
+
 
             // set up the repositories
             var dataPath = Path.Combine(this.RootPathProvider.GetRootPath(), "Data");
@@ -63,7 +73,6 @@ namespace IISLogReader
             IUserStore userStore = new UserStore(userStorePath, container.Resolve<IFileWrap>(), container.Resolve<IDirectoryWrap>(), container.Resolve<IPasswordProvider>());
             userStore.Load();
             container.Register<IUserStore>(userStore);
-            container.Register<IProjectRepository, ProjectRepository>();
 
             // add "Shared" folder for views
             this.Conventions.ViewLocationConventions.Add((viewName, model, context) =>
@@ -82,16 +91,16 @@ namespace IISLogReader
             // WebConsole classes and controllers
             container.Register<IUserMapper, UserMapper>();
 
-        }
+            // register database context per request
+            container.Register<IDbContext>(new SQLiteDbContext(_databasePath));
 
-        private void InitialiseDatabase(TinyIoCContainer container)
-        {
-            string dbPath = Path.Combine(AppContext.BaseDirectory, "IISLogReader.db");
-            container.Register<IDbContext>((c, o) => new SQLiteDbContext(dbPath));
-            using (IDbContext dbc = container.Resolve<IDbContext>())
-            {
-                dbc.Initialise();
-            }
+            // commands
+            container.Register<ICreateProjectCommand, CreateProjectCommand>();
+
+            // repositories
+            container.Register<IProjectRepository, ProjectRepository>();
+
+
         }
 
         protected override void RequestStartup(TinyIoCContainer container, IPipelines pipelines, NancyContext context)
@@ -127,23 +136,20 @@ namespace IISLogReader
                     }
 
                     // load a list of projects
-                    using (IDbContext dbContext = container.Resolve<IDbContext>())
-                    {
-                        IProjectRepository projectRepo = container.Resolve<IProjectRepository>();
-                        ctx.ViewBag.Projects = projectRepo.GetAll(dbContext).ToList();
-                    }
-
+                    IDbContext dbContext = container.Resolve<IDbContext>();
+                    IProjectRepository projectRepo = container.Resolve<IProjectRepository>();
+                    ctx.ViewBag.Projects = projectRepo.GetAll().ToList();
                 }
 
                 return null;
             };
 
-            //// clean up anything that needs to be
-            //pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
-            //    {
-            //        IUnitOfWork uow = container.Resolve<IUnitOfWork>();
-            //        uow.Dispose();
-            //    });
+            // clean up anything that needs to be
+            pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
+                {
+                    IDbContext dbContext = container.Resolve<IDbContext>();
+                    dbContext.Dispose();
+                });
         }
 
     }

@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using IISLogReader.ViewModels.Project;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Data.Repositories;
 
 namespace Test.IISLogReader.Modules
 {
@@ -34,6 +35,7 @@ namespace Test.IISLogReader.Modules
         private IDbContext _dbContext;
         private ICreateProjectCommand _createProjectCommand;
         private IProjectValidator _projectValidator;
+        private IProjectRepository _projectRepo;
 
         [SetUp]
         public void ProjectModuleTest_SetUp()
@@ -41,10 +43,11 @@ namespace Test.IISLogReader.Modules
             _dbContext = Substitute.For<IDbContext>();
             _createProjectCommand = Substitute.For<ICreateProjectCommand>();
             _projectValidator = Substitute.For<IProjectValidator>();
+            _projectRepo = Substitute.For<IProjectRepository>();
 
             Mapper.Initialize((cfg) =>
             {
-                cfg.CreateMap<ProjectViewModel, ProjectModel>();
+                cfg.CreateMap<ProjectFormViewModel, ProjectModel>();
             });
         }
 
@@ -62,7 +65,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -103,7 +106,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectSave };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -128,7 +131,7 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(1, result.Messages.Length);
 
             // the project should not have been added
-            _createProjectCommand.DidNotReceive().Execute(_dbContext, Arg.Any<ProjectModel>());
+            _createProjectCommand.DidNotReceive().Execute(Arg.Any<ProjectModel>());
 
         }
 
@@ -141,7 +144,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectSave };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -166,14 +169,106 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(0, result.Messages.Count);
 
             // the project should have been added
-            _createProjectCommand.Received(1).Execute(_dbContext, Arg.Any<ProjectModel>());
+            _createProjectCommand.Received(1).Execute(Arg.Any<ProjectModel>());
             _dbContext.Received(1).BeginTransaction();
             _dbContext.Received(1).Commit();
         }
 
         #endregion
 
+        #region View Tests
 
+        [TestCase("_z")]
+        [TestCase("a1")]
+        [TestCase("ccc")]
+        public void View_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.View.Replace("{projectId}", projectId);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+        }
+
+
+        [Test]
+        public void View_ProjectDoesNotExist_Returns404()
+        {
+            int projectId = new Random().Next(1, 100);
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.View.Replace("{projectId}", projectId.ToString());
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            _projectRepo.Received(1).GetById(projectId);
+
+        }
+
+        [Test]
+        public void View_ProjectIsValid_ReturnsModel()
+        {
+            ProjectModel project = DataHelper.CreateProjectModel();
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+            _projectRepo.GetById(project.Id).Returns(project);
+
+            // execute
+            var url = Actions.Project.View.Replace("{projectId}", project.Id.ToString());
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _projectRepo.Received(1).GetById(project.Id);
+
+            ProjectViewViewModel viewModel = JsonConvert.DeserializeObject<ProjectViewViewModel>(response.Body.AsString());
+            Assert.AreEqual(project.Id, viewModel.ProjectId);
+            Assert.AreEqual(project.Name, viewModel.ProjectName);
+
+
+        }
+
+        #endregion
 
     }
 }

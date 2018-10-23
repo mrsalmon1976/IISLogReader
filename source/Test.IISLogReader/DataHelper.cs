@@ -14,7 +14,9 @@ namespace Test.IISLogReader
 
         public static ProjectModel CreateProjectModel()
         {
+            Random r = new Random();
             ProjectModel model = new ProjectModel();
+            model.Id = r.Next(1, 1000);
             model.Name = Path.GetRandomFileName();
             return model;
         }

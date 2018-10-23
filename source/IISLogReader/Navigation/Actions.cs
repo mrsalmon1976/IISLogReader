@@ -22,6 +22,7 @@ namespace IISLogReader.Navigation
 
         public class Project
         {
+            public const string View = "/project/{projectId}";
             public const string Save = "/project/save";
         }
 

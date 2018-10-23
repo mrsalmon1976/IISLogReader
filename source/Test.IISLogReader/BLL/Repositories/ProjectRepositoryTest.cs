@@ -17,17 +17,20 @@ namespace Test.IISLogReader.BLL.Repositories
     [TestFixture]
     public class ProjectRepositoryTest
     {
+        private IDbContext _dbContext;
         private IProjectRepository _projectRepo;
 
 
         [SetUp]
-        public void CreateProjectCommandTest_SetUp()
+        public void ProjectRepositoryTest_SetUp()
         {
-            _projectRepo = new ProjectRepository();
+            _dbContext = Substitute.For<IDbContext>();
+
+            _projectRepo = new ProjectRepository(_dbContext);
         }
 
         [TearDown]
-        public void CreateProjectCommandTest_TearDown()
+        public void ProjectRepositoryTest_TearDown()
         {
             // delete all .db files (in case previous tests have failed)
             TestHelper.DeleteTestFiles(AppContext.BaseDirectory, "*.dbtest");
@@ -45,6 +48,8 @@ namespace Test.IISLogReader.BLL.Repositories
             {
                 dbContext.Initialise();
 
+                IProjectRepository projectRepo = new ProjectRepository(dbContext);
+
                 ProjectModel projectA = DataHelper.CreateProjectModel();
                 projectA.Name = "AAA";
                 ProjectModel projectB = DataHelper.CreateProjectModel();
@@ -52,12 +57,12 @@ namespace Test.IISLogReader.BLL.Repositories
                 ProjectModel projectC = DataHelper.CreateProjectModel();
                 projectC.Name = "CCC";
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(new ProjectValidator());
-                createProjectCommand.Execute(dbContext, projectA);
-                createProjectCommand.Execute(dbContext, projectC);
-                createProjectCommand.Execute(dbContext, projectB);
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
+                createProjectCommand.Execute(projectA);
+                createProjectCommand.Execute(projectC);
+                createProjectCommand.Execute(projectB);
 
-                List<ProjectModel> projects = _projectRepo.GetAll(dbContext).ToList();
+                List<ProjectModel> projects = projectRepo.GetAll().ToList();
 
                 Assert.AreEqual(3, projects.Count);
                 Assert.AreEqual("AAA", projects[0].Name);
