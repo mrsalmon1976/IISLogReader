@@ -15,6 +15,11 @@ namespace IISLogReader.Navigation
             public const string Default = "Views/Dashboard/DashboardView.cshtml";
         }
 
+        public class Project
+        {
+            public const string View = "Views/Project/ProjectView.cshtml";
+        }
+
         public class User
         {
             public const string ListPartial = "Views/User/_UserList.cshtml";

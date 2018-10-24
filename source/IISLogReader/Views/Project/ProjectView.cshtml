@@ -1,0 +1,23 @@
+﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.Project.ProjectViewViewModel>
+@using Nancy.Security
+@using IISLogReader.BLL.Data.Models
+@using IISLogReader.Navigation
+@using IISLogReader.BLL.Utils
+@using IISLogReader.BLL.Security
+@using System.Collections.Generic
+@{
+    Layout = "Views/Layouts/MainLayout.cshtml";
+    ViewBag.Title = "IISLogReader :: " + Model.ProjectName;
+    List<string> currentUserClaims = ViewBag.Claims;
+}
+<div id="content-dashboard">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">Project / @Model.ProjectName</h1>
+        </div>
+    </div><!--/.row-->
+
+    <form>
+        <input type="hidden" id="projectId" name="projectId" value="@Model.ProjectId" />
+    </form>
+</div>

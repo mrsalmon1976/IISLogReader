@@ -22,8 +22,23 @@ namespace IISLogReader.Navigation
 
         public class Project
         {
-            public const string View = "/project/{projectId}";
-            public const string Save = "/project/save";
+            public const string Save = "/project/save"; 
+
+            public static string View()
+            {
+                return "/project/{projectId}";
+            }
+
+            public static string View(string projectId)
+            {
+                return Actions.Project.View().Replace("{projectId}", projectId);
+            }
+
+            public static string View(int projectId)
+            {
+                return Actions.Project.View().Replace("{projectId}", projectId.ToString());
+            }
+
         }
 
         public class User

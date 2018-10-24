@@ -193,7 +193,7 @@ namespace Test.IISLogReader.Modules
                 );
 
             // execute
-            var url = Actions.Project.View.Replace("{projectId}", projectId);
+            var url = Actions.Project.View(projectId);
             var response = browser.Get(url, (with) =>
             {
                 with.HttpRequest();
@@ -221,7 +221,7 @@ namespace Test.IISLogReader.Modules
                 );
 
             // execute
-            var url = Actions.Project.View.Replace("{projectId}", projectId.ToString());
+            var url = Actions.Project.View(projectId);
             var response = browser.Get(url, (with) =>
             {
                 with.HttpRequest();
@@ -235,22 +235,53 @@ namespace Test.IISLogReader.Modules
         }
 
         [Test]
-        public void View_ProjectIsValid_ReturnsModel()
+        public void View_NotLoggedIn_Returns401()
         {
-            ProjectModel project = DataHelper.CreateProjectModel();
-
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
                     .RequestStartup((container, pipelines, context) => {
-                        context.CurrentUser = currentUser;
                     })
                 );
-            _projectRepo.GetById(project.Id).Returns(project);
 
             // execute
-            var url = Actions.Project.View.Replace("{projectId}", project.Id.ToString());
+            var url = Actions.Project.View(1);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        }
+
+        [Test]
+        public void View_ProjectIsValid_ReturnsModel()
+        {
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            ProjectModel project = DataHelper.CreateProjectModel();
+            var url = Actions.Project.View(project.Id);
+
+            _projectRepo.GetById(project.Id).Returns(project);
+
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo))
+                        .RootPathProvider(new TestRootPathProvider())
+                        .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                        context.ViewBag.CurrentUserName = currentUser.UserName;
+                        context.ViewBag.Scripts = new List<string>();
+                        context.ViewBag.Claims = new List<string>();
+                        context.ViewBag.Projects = new List<ProjectModel>();
+
+                    })
+                );
+
+            // execute
             var response = browser.Get(url, (with) =>
             {
                 with.HttpRequest();
@@ -261,11 +292,14 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             _projectRepo.Received(1).GetById(project.Id);
 
-            ProjectViewViewModel viewModel = JsonConvert.DeserializeObject<ProjectViewViewModel>(response.Body.AsString());
-            Assert.AreEqual(project.Id, viewModel.ProjectId);
-            Assert.AreEqual(project.Name, viewModel.ProjectName);
+            response.Body["#projectId"]
+                .ShouldExistOnce()
+                .And.ShouldContainAttribute("value", project.Id.ToString());
 
-
+            response.Body[".page-header"]
+                .ShouldExistOnce()
+                .And.ShouldContain(project.Name);
+                
         }
 
         #endregion

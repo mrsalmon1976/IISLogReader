@@ -19,6 +19,10 @@ using Nancy.Security;
 using Nancy.ViewEngines.Razor;
 using IISLogReader.BLL.Validators;
 using NUnit.Framework;
+using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Data.Models;
 
 namespace Test.IISLogReader.Modules
 {
@@ -75,6 +79,11 @@ namespace Test.IISLogReader.Modules
             {
                 this.ApplicationStartupCallback(container);
             }
+
+            this.Conventions.ViewLocationConventions.Add((viewName, model, context) =>
+            {
+                return string.Concat("Views/Shared/", viewName);
+            });
         }
 
         protected override void ConfigureRequestContainer(TinyIoCContainer container, NancyContext context)
@@ -83,6 +92,12 @@ namespace Test.IISLogReader.Modules
             container.Register<IUserMapper, UserMapper>();
             container.Register<IUserStore>(Substitute.For<IUserStore>());
             container.Register<IUserValidator>(Substitute.For<IUserValidator>());
+
+            // register database context per request
+            container.Register<IDbContext>(Substitute.For<IDbContext>());
+            container.Register<ICreateProjectCommand>(Substitute.For<ICreateProjectCommand>());
+            container.Register<IProjectRepository>(Substitute.For<IProjectRepository>());
+
             if (this.ConfigureRequestContainerCallback != null)
             {
                 this.ConfigureRequestContainerCallback(container);
@@ -107,6 +122,7 @@ namespace Test.IISLogReader.Modules
             context.ViewBag.Scripts = new List<string>();
             context.ViewBag.Claims = new List<string>();
             context.CurrentUser = this.CurrentUser;
+            context.ViewBag.Projects = new List<ProjectModel>();
             if (this.CurrentUser != null)
             {
                 context.ViewBag.CurrentUserName = this.CurrentUser.UserName;
@@ -146,6 +162,7 @@ namespace Test.IISLogReader.Modules
         {
             return TestContext.CurrentContext.TestDirectory; 
         }
+
     }
 
 }

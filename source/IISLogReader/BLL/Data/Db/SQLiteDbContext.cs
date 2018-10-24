@@ -16,16 +16,21 @@ namespace IISLogReader.BLL.Data
         private readonly string _dbPath;
         private readonly string _connString;
         private SQLiteConnection _conn;
-        private Guid _myId;
 
         public SQLiteDbContext(string filePath)
         {
-            _myId = Guid.NewGuid();
+            this.Id = Guid.NewGuid(); 
             _dbPath = filePath;
             _connString = String.Format("Data Source={0};Version=3;", filePath);
             _conn = new SQLiteConnection(_connString);
             _conn.Open();
         }
+
+
+        /// <summary>
+        /// Gets/sets the unique identifier of the DbContext - useful for debugging but serves no other practical purpose
+        /// </summary>
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Begins a new transaction (if supported by the DbContext)

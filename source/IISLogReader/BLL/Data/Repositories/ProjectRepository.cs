@@ -24,7 +24,7 @@ namespace IISLogReader.BLL.Data.Repositories
         }
         public IEnumerable<ProjectModel> GetAll()
         {
-            const string sql = "SELECT * FROM Projects ORDER BY Name";
+            const string sql = "SELECT * FROM Projects ORDER BY Name COLLATE NOCASE ASC";
             return _dbContext.Query<ProjectModel>(sql);
         }
 

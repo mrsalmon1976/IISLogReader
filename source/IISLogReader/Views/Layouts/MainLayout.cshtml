@@ -74,7 +74,7 @@
                         @foreach (var pm in projects)
                         {
                             <li>
-                                <a class="" href="#">
+                                <a class="" href="@Actions.Project.View(pm.Id)">
                                     <span class="fa fa-arrow-right">&nbsp;</span> @pm.Name
                                 </a>
                             </li>
@@ -97,7 +97,7 @@
 
     <div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
 
-        @Html.Partial("_BreadcrumbPanel")
+        @Html.Partial("Shared/_BreadcrumbPanel")
 
         @RenderBody()
 

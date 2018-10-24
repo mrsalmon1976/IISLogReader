@@ -1,11 +1,10 @@
-﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<dynamic>
+﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.Dashboard.DashboardViewModel>
 @using Nancy.Security
 @using IISLogReader.BLL.Data.Models
 @using IISLogReader.Navigation
 @using IISLogReader.BLL.Utils
 @using IISLogReader.BLL.Security
 @using System.Collections.Generic
-@model IISLogReader.ViewModels.Dashboard.DashboardViewModel
 @{
     Layout = "Views/Layouts/MainLayout.cshtml";
     ViewBag.Title = "IISLogReader :: Dashboard";

@@ -38,7 +38,7 @@ namespace IISLogReader.Modules
             _createProjectCommand = createProjectCommand;
             _projectRepo = projectRepo;
 
-            Get[Actions.Project.View] = x =>
+            Get[Actions.Project.View()] = x =>
             {
                 return ProjectView(x.projectId);
             };
@@ -87,7 +87,9 @@ namespace IISLogReader.Modules
             ProjectViewViewModel viewModel = new ProjectViewViewModel();
             viewModel.ProjectId = projectId;
             viewModel.ProjectName = project.Name;
-            return Response.AsJson(viewModel);
+
+            AddScript(Scripts.ProjectView);
+            return this.View[Views.Project.View, viewModel];
         }
     }
 }
