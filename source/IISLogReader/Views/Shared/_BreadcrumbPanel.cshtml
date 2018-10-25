@@ -1,8 +1,6 @@
 ﻿@using IISLogReader.Navigation
-@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<dynamic>
-@{ 
-    var currentPath = Request.Url.Path;
-}
+@using IISLogReader.ViewModels
+@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<List<Breadcrumb>>
 <div class="row">
     <ol class="breadcrumb">
         <li>
@@ -10,13 +8,16 @@
                 <em class="fa fa-home"></em>
             </a>
         </li>
-        @if (currentPath.StartsWith(Actions.Dashboard.Default))
+        @foreach (var bc in Model)
         {
-            <li class="active">Dashboard</li>
-        }
-        @if (currentPath.StartsWith(Actions.User.Default))
-        {
-            <li class="active">Users</li>
+            if (string.IsNullOrEmpty(bc.Url))
+            {
+                <li class="active">@bc.Text</li>
+            }
+            else
+            {
+                <li class="active"><a href="@bc.Url">@bc.Text</a></li>
+            }
         }
     </ol>
 </div><!--/.row-->

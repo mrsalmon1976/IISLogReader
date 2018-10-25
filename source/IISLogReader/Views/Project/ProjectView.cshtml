@@ -2,6 +2,7 @@
 @using Nancy.Security
 @using IISLogReader.BLL.Data.Models
 @using IISLogReader.Navigation
+@using IISLogReader.ViewModels
 @using IISLogReader.BLL.Utils
 @using IISLogReader.BLL.Security
 @using System.Collections.Generic
@@ -9,13 +10,48 @@
     Layout = "Views/Layouts/MainLayout.cshtml";
     ViewBag.Title = "IISLogReader :: " + Model.ProjectName;
     List<string> currentUserClaims = ViewBag.Claims;
+    List<Breadcrumb> breadcrumbs = new List<Breadcrumb>();
+    breadcrumbs.Add(new Breadcrumb("Dashboard", Actions.Dashboard.Default));
+    breadcrumbs.Add(new Breadcrumb(Model.ProjectName));
 }
+@Html.Partial("Shared/_BreadcrumbPanel", breadcrumbs)
+
 <div id="content-dashboard">
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-md-6">
             <h1 class="page-header">Project / @Model.ProjectName</h1>
         </div>
     </div><!--/.row-->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-body tabs">
+                    <ul class="nav nav-pills">
+                        <li class="active"><a href="#tab-project-files" data-toggle="tab">Files</a></li>
+                        <li><a href="#pilltab2" data-toggle="tab">Tab 2</a></li>
+                        <li><a href="#pilltab3" data-toggle="tab">Tab 3</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade in active" id="tab-project-files">
+                            <h4>Files</h4>
+                            <i class="fa fa-spinner fa-spin fa-3x"></i>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eget rutrum purus. Donec hendrerit ante ac metus sagittis elementum. Mauris feugiat nisl sit amet neque luctus, a tincidunt odio auctor.</p>
+                        </div>
+                        <div class="tab-pane fade" id="pilltab2">
+                            <h4>Tab 2</h4>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eget rutrum purus. Donec hendrerit ante ac metus sagittis elementum. Mauris feugiat nisl sit amet neque luctus, a tincidunt odio auctor.</p>
+                        </div>
+                        <div class="tab-pane fade" id="pilltab3">
+                            <h4>Tab 3</h4>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eget rutrum purus. Donec hendrerit ante ac metus sagittis elementum. Mauris feugiat nisl sit amet neque luctus, a tincidunt odio auctor.</p>
+                        </div>
+                    </div>
+                </div>
+            </div><!--/.panel-->
+        </div>
+        
+    </div>
 
     <form>
         <input type="hidden" id="projectId" name="projectId" value="@Model.ProjectId" />

@@ -1,10 +1,16 @@
 ﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.User.UserViewModel>
 @using IISLogReader.BLL.Data.Models
 @using IISLogReader.Navigation
+@using IISLogReader.ViewModels
+@using System.Collections.Generic
 @{
     Layout = "Views/Layouts/MainLayout.cshtml";
     ViewBag.Title = "IISLogReader :: Users";
+    List<Breadcrumb> breadcrumbs = new List<Breadcrumb>();
+    breadcrumbs.Add(new Breadcrumb("Users"));
 }
+@Html.Partial("Shared/_BreadcrumbPanel", breadcrumbs)
+
 <div class="row">
     <div class="col-lg-12">
         <h1 class="page-header">Users</h1>
