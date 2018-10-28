@@ -49,10 +49,58 @@ namespace Test.IISLogReader.Modules
             Mapper.Reset();
         }
 
-        #region AddFile Tests
+        #region Save Tests
+
 
         [Test]
-        public void AddFile_OnFilePost_ExecutesCommand()
+        public void Save_OnSaveError_ErrorReturnedInResponse()
+        {
+            int projectId = new Random().Next(1, 100);
+            string fileName = Path.GetRandomFileName() + ".log";
+            string exceptionMessage = Guid.NewGuid().ToString();
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectSave };
+            _createLogFileWithRequestsCommand.When(x => x.Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>()))
+                .Do((c) => { throw new Exception(exceptionMessage); });
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+            byte[] buffer = new byte[100];
+            new Random().NextBytes(buffer);
+            using (MemoryStream stream = new MemoryStream(buffer))
+            {
+                var multipart = new BrowserContextMultipartFormData(x =>
+                {
+                    x.AddFile("foo", fileName, "text/plain", stream);
+                });
+
+                // execute
+                var url = Actions.LogFile.Save(projectId);
+                var response = browser.Post(url, (with) =>
+                {
+                    with.HttpRequest();
+                    with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                    with.MultiPartFormData(multipart);
+                    with.FormValue("projectId", projectId.ToString());
+                });
+
+                // assert
+                Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+                string result = response.Body.AsString();
+
+                Assert.AreEqual(JsonConvert.SerializeObject(exceptionMessage), result);
+                _createLogFileWithRequestsCommand.Received(1).Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>());
+                _dbContext.Received(1).Rollback();
+            }
+        }
+
+        [Test]
+        public void Save_OnFilePost_ExecutesCommand()
         {
             int projectId = new Random().Next(1, 100);
             string fileName = Path.GetRandomFileName() + ".log";
@@ -69,33 +117,35 @@ namespace Test.IISLogReader.Modules
                 );
             byte[] buffer = new byte[100];
             new Random().NextBytes(buffer);
-            MemoryStream stream = new MemoryStream(buffer);
-            var multipart = new BrowserContextMultipartFormData(x => {
-                x.AddFile("foo", fileName, "text/plain", stream);
-            });
-
-            // execute
-            var url = Actions.LogFile.Save(projectId);
-            var response = browser.Post(url, (with) =>
+            using (MemoryStream stream = new MemoryStream(buffer))
             {
-                with.HttpRequest();
-                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
-                with.MultiPartFormData(multipart);
-                with.FormValue("projectId", projectId.ToString());
-            });
+                var multipart = new BrowserContextMultipartFormData(x =>
+                {
+                    x.AddFile("foo", fileName, "text/plain", stream);
+                });
 
-            // assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            _createLogFileWithRequestsCommand.Received(1).Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>());
+                // execute
+                var url = Actions.LogFile.Save(projectId);
+                var response = browser.Post(url, (with) =>
+                {
+                    with.HttpRequest();
+                    with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                    with.MultiPartFormData(multipart);
+                    with.FormValue("projectId", projectId.ToString());
+                });
 
-            stream.Dispose();
+                // assert
+                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+                _createLogFileWithRequestsCommand.Received(1).Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>());
+                _dbContext.Received(1).Commit();
+            }
         }
 
         #endregion
 
-        
 
-        
+
+
 
     }
 }

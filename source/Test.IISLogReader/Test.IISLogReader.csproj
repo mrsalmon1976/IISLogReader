@@ -110,6 +110,12 @@
       <HintPath>..\packages\System.Data.SQLite.Linq.1.0.109.0\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Compression, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
+    <Reference Include="System.Reactive, Version=4.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reactive.4.0.0\lib\net46\System.Reactive.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=3.0.3000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reactive.Linq.4.0.0\lib\net46\System.Reactive.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
@@ -119,6 +125,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.4.5.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.1\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
@@ -130,6 +139,8 @@
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.6\lib\net45\System.Web.Razor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -139,9 +150,16 @@
       <HintPath>..\packages\SystemWrapper.0.4\lib\SystemWrapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Tx.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=3d3a4b0768c9178e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Tx.Core.3.0.0\lib\net46\Tx.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Tx.Windows, Version=3.0.0.0, Culture=neutral, PublicKeyToken=3d3a4b0768c9178e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Tx.Windows.3.0.0\lib\net46\Tx.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\CreateRequestBatchCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateLogFileWithRequestsCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
@@ -150,6 +168,7 @@
     <Compile Include="BLL\Repositories\LogFileRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />
+    <Compile Include="BLL\Validators\RequestValidatorTest.cs" />
     <Compile Include="BLL\Validators\LogFileValidatorTest.cs" />
     <Compile Include="BLL\Validators\ProjectValidatorTest.cs" />
     <Compile Include="BLL\Validators\UserValidatorTest.cs" />
@@ -160,12 +179,14 @@
     <Compile Include="Modules\LoginModuleTest.cs" />
     <Compile Include="Modules\ModuleTestBootstrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestAssets\TestAsset.cs" />
     <Compile Include="TestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="TestAssets\LogFile.log" />
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>

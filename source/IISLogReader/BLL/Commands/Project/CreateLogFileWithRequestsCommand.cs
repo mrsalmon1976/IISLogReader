@@ -1,6 +1,7 @@
 ﻿using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Data.Models;
 using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,24 +22,27 @@ namespace IISLogReader.BLL.Commands.Project
     {
         private IDbContext _dbContext;
         private ILogFileRepository _logFileRepo;
+        private ICreateLogFileCommand _createLogFileCommand;
+        private ICreateRequestBatchCommand _createRequestBatchCommand;
 
-        public CreateLogFileWithRequestsCommand(IDbContext dbContext, ILogFileRepository logFileRepo)
+        public CreateLogFileWithRequestsCommand(IDbContext dbContext, ILogFileRepository logFileRepo, ICreateLogFileCommand createLogFileCommand, ICreateRequestBatchCommand createRequestBatchCommand)
         {
             _dbContext = dbContext;
             _logFileRepo = logFileRepo;
+            _createLogFileCommand = createLogFileCommand;
+            _createRequestBatchCommand = createRequestBatchCommand;
         }
 
         public void Execute(int projectId, string fileName, Stream fileStream)
         {
             // load the contents of the file
             StreamReader reader = new StreamReader(fileStream);
-            IEnumerable<W3CEvent> events;
+            List<W3CEvent> logEvents;
             string fileHash = String.Empty;
 
             try
             {
-                events = W3CEnumerable.FromStream(reader);
-                events.First();     // peek at the first item - if the file is invalid this will cause an exception to be raised
+                logEvents = W3CEnumerable.FromStream(reader).ToList();
             }
             catch (Exception)
             {
@@ -53,13 +57,22 @@ namespace IISLogReader.BLL.Commands.Project
                 fileHash = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
             }
             LogFileModel logFile = _logFileRepo.GetByHash(projectId, fileHash);
+            if (logFile != null)
+            {
+                throw new ValidationException("Log file already loaded for this project");
+            }
 
             // save details of the file itself
+            logFile = new LogFileModel();
+            logFile.ProjectId = projectId;
+            logFile.FileHash = fileHash;
+            logFile.FileLength = fileStream.Length;
+            logFile.FileName = fileName;
+            logFile.RecordCount = logEvents.Count;
+            logFile = _createLogFileCommand.Execute(logFile);
 
-
-            // save each event
-
-            reader.Dispose();
+            // save the requests
+            _createRequestBatchCommand.Execute(logFile.Id, logEvents);
         }
     }
 }

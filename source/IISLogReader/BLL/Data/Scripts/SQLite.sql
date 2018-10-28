@@ -18,8 +18,7 @@ CREATE TABLE IF NOT EXISTS LogFiles (
 CREATE TABLE IF NOT EXISTS Requests (
 	Id INTEGER PRIMARY KEY,
 	LogFileId text NOT NULL,
-	Date text NULL,
-	Time text NULL,
+	RequestDateTime text NULL,
 	ClientIp text NULL,
 	UserName text NULL,
 	ServiceName text NULL,

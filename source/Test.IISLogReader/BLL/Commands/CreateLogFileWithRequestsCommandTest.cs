@@ -9,6 +9,10 @@ using IISLogReader.BLL.Commands.Project;
 using IISLogReader.BLL.Data;
 using System.IO;
 using IISLogReader.BLL.Data.Repositories;
+using Test.IISLogReader.TestAssets;
+using IISLogReader.BLL.Exceptions;
+using Tx.Windows;
+using System.Security.Cryptography;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -19,14 +23,18 @@ namespace Test.IISLogReader.BLL.Commands
 
         private IDbContext _dbContext;
         private ILogFileRepository _logFileRepo;
+        private ICreateLogFileCommand _createLogFileCommand;
+        private ICreateRequestBatchCommand _createRequestBatchCommand;
 
         [SetUp]
         public void AddProjectFileCommandTest_SetUp()
         {
             _dbContext = Substitute.For<IDbContext>();
             _logFileRepo = Substitute.For<ILogFileRepository>();
+            _createLogFileCommand = Substitute.For<ICreateLogFileCommand>();
+            _createRequestBatchCommand = Substitute.For<ICreateRequestBatchCommand>();
 
-            _createLogFileWithRequestsCommand = new CreateLogFileWithRequestsCommand(_dbContext, _logFileRepo);
+            _createLogFileWithRequestsCommand = new CreateLogFileWithRequestsCommand(_dbContext, _logFileRepo, _createLogFileCommand, _createRequestBatchCommand);
         }
 
         [TearDown]
@@ -57,35 +65,90 @@ namespace Test.IISLogReader.BLL.Commands
             }
         }
 
-        /// <summary>
-        /// Tests that the insert actually works
-        /// </summary>
         [Test]
-        public void Execute_IntegrationTest_SQLite()
+        public void Execute_FileAlreadyAddedToProject_ThrowsValidationException()
         {
-            //string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
-            //using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
-            //{
-            //    dbContext.Initialise();
+            int projectId = new Random().Next(1, 100);
+            string fileName = Path.GetRandomFileName() + ".log";
+            string filePath = Path.Combine(AppContext.BaseDirectory, fileName);
+            File.WriteAllText(filePath, "This is not a valid IIS file");
 
-            //    ProjectModel project = DataHelper.CreateProjectModel();
+            LogFileModel logFileModel = DataHelper.CreateLogFileModel();
+            logFileModel.ProjectId = projectId;
 
-            //    IProjectValidator projectValidator = new ProjectValidator();
-            //    ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, projectValidator);
-            //    ProjectModel savedProject = createProjectCommand.Execute(project);
+            _logFileRepo.GetByHash(projectId, Arg.Any<string>()).Returns(logFileModel);
 
-            //    Assert.Greater(savedProject.Id, 0);
+            using (Stream stream = TestAsset.ReadTextStream(TestAsset.LogFile))
+            {
+                // execute
+                TestDelegate del = () => _createLogFileWithRequestsCommand.Execute(projectId, fileName, stream);
 
-            //    int rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Projects");
-            //    Assert.Greater(rowCount, 0);
+                // assert
+                Assert.Throws<ValidationException>(del);
 
-            //    string projectName = dbContext.ExecuteScalar<string>("SELECT Name FROM projects WHERE Id = @Id", savedProject);
-            //    Assert.AreEqual(savedProject.Name, projectName);
-
-            //}
-
+                // we shouldn't have even tried to load the project by hash
+                _logFileRepo.Received(1).GetByHash(projectId, Arg.Any<string>());
+                _createLogFileCommand.DidNotReceive().Execute(Arg.Any<LogFileModel>());
+            }
         }
 
+        [Test]
+        public void Execute_ValidFile_ExecutesCommands()
+        {
+            int projectId = new Random().Next(1, 100);
+            string fileName = Path.GetRandomFileName() + ".log";
+
+            LogFileModel logFileModel = DataHelper.CreateLogFileModel();
+            _createLogFileCommand.Execute(Arg.Any<LogFileModel>()).Returns(logFileModel);
+
+            using (Stream stream = TestAsset.ReadTextStream(TestAsset.LogFile))
+            {
+                // execute
+                _createLogFileWithRequestsCommand.Execute(projectId, fileName, stream);
+
+                // assert
+                _logFileRepo.Received(1).GetByHash(projectId, Arg.Any<string>());
+                _createLogFileCommand.Received(1).Execute(Arg.Any<LogFileModel>());
+                _createRequestBatchCommand.Received(1).Execute(logFileModel.Id, Arg.Any<IEnumerable<W3CEvent>>());
+            }
+        }
+
+        [Test]
+        public void Execute_ValidFile_SavesLogFilePropertiesCorrectly()
+        {
+            int projectId = new Random().Next(1, 100);
+            string fileName = Path.GetRandomFileName() + ".log";
+            string fileHash = Guid.NewGuid().ToString();
+
+            LogFileModel logFileModel = DataHelper.CreateLogFileModel();
+            _createLogFileCommand.Execute(Arg.Any<LogFileModel>()).Returns(logFileModel);
+
+            // set up the intecept so we can check values
+            LogFileModel savedLogFileModel = null;
+            _createLogFileCommand.When(x => x.Execute(Arg.Any<LogFileModel>())).Do((c) => { savedLogFileModel = c.ArgAt<LogFileModel>(0); });
+
+            using (Stream stream = TestAsset.ReadTextStream(TestAsset.LogFile))
+            {
+                // execute
+                _createLogFileWithRequestsCommand.Execute(projectId, fileName, stream);
+
+                using (var md5 = MD5.Create())
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    var hash = md5.ComputeHash(stream);
+                    fileHash = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
+
+                // assert
+                Assert.IsNotNull(savedLogFileModel);
+                Assert.AreEqual(projectId, savedLogFileModel.ProjectId);
+                Assert.AreEqual(fileHash, savedLogFileModel.FileHash);
+                Assert.AreEqual(stream.Length, savedLogFileModel.FileLength);
+                Assert.AreEqual(fileName, savedLogFileModel.FileName);
+                Assert.Greater(savedLogFileModel.RecordCount, 1);
+
+            }
+        }
 
 
     }

@@ -14,7 +14,8 @@
     $("#dz-project-files").dropzone({
         error: function (file, response)
         {
-            $(file.previewElement).addClass("dz-error").find('.dz-error-message').text(response.message);
+            debugger;
+            $(file.previewElement).addClass("dz-error").find('.dz-error-message').text(response);
         }
     });
 });

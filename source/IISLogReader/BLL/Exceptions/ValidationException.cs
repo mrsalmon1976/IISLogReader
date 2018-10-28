@@ -8,6 +8,10 @@ namespace IISLogReader.BLL.Exceptions
 {
     public class ValidationException : Exception
     {
+        public ValidationException(string validationError) : this(new string[] {  validationError })
+        {
+        }
+
         public ValidationException(IEnumerable<string> validationErrors) : base(String.Join(",", validationErrors))
         {
             this.ValidationErrors = validationErrors.ToArray();

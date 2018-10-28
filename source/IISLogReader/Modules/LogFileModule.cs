@@ -50,8 +50,16 @@ namespace IISLogReader.Modules
             foreach (HttpFile f in Request.Files)
             {
                 _dbContext.BeginTransaction();
-                _createLogFileWithRequestsCommand.Execute(model.ProjectId, f.Name, f.Value);
-                _dbContext.Commit();
+                try
+                {
+                    _createLogFileWithRequestsCommand.Execute(model.ProjectId, f.Name, f.Value);
+                    _dbContext.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _dbContext.Rollback();
+                    return this.Response.AsJson<string>(ex.Message, HttpStatusCode.BadRequest);
+                }
 
             }
             return HttpStatusCode.OK;

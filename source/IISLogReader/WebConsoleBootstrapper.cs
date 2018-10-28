@@ -91,6 +91,7 @@ namespace IISLogReader
             container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
             container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
             container.Register<ICreateProjectCommand, CreateProjectCommand>();
+            container.Register<ICreateRequestBatchCommand, CreateRequestBatchCommand>();
 
             // repositories
             container.Register<ILogFileRepository, LogFileRepository>();

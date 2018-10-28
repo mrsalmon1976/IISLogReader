@@ -152,6 +152,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BLL\Commands\Project\CreateRequestBatchCommand.cs" />
     <Compile Include="BLL\Commands\Project\CreateLogFileWithRequestsCommand.cs" />
     <Compile Include="BLL\Commands\Project\CreateLogFileCommand.cs" />
     <Compile Include="BLL\Commands\Project\CreateProjectCommand.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="BLL\Data\Db\SQLiteDbContext.cs" />
     <Compile Include="BLL\Data\Models\LogFileModel.cs" />
     <Compile Include="BLL\Data\Models\ProjectModel.cs" />
+    <Compile Include="BLL\Data\Models\RequestModel.cs" />
     <Compile Include="BLL\Data\Models\UserModel.cs" />
     <Compile Include="BLL\Data\Repositories\LogFileRepository.cs" />
     <Compile Include="BLL\Data\Repositories\ProjectRepository.cs" />
@@ -170,6 +172,7 @@
     <Compile Include="BLL\Security\Roles.cs" />
     <Compile Include="BLL\Security\UserIdentity.cs" />
     <Compile Include="BLL\Utils\ParsedAssemblyQualifiedName.cs" />
+    <Compile Include="BLL\Validators\RequestValidator.cs" />
     <Compile Include="BLL\Validators\LogFileValidator.cs" />
     <Compile Include="BLL\Validators\ProjectValidator.cs" />
     <Compile Include="BLL\Validators\UserValidator.cs" />

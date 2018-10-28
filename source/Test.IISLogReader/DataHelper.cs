@@ -34,6 +34,16 @@ namespace Test.IISLogReader
             return model;
         }
 
+        public static RequestModel CreateRequestModel()
+        {
+            Random r = new Random();
+            RequestModel model = new RequestModel();
+            model.Id = r.Next(1, 1000);
+            model.LogFileId = r.Next(1, 1000);
+            model.RequestDateTime = DateTime.Now;
+            return model;
+        }
+
         public static UserModel CreateUserModel()
         {
             UserModel model = new UserModel();
