@@ -12,6 +12,19 @@ namespace Test.IISLogReader
     public class DataHelper
     {
 
+        public static LogFileModel CreateLogFileModel()
+        {
+            Random r = new Random();
+            LogFileModel model = new LogFileModel();
+            model.Id = r.Next(1, 1000);
+            model.ProjectId = r.Next(1, 1000);
+            model.FileName = Path.GetRandomFileName();
+            model.FileHash = Path.GetRandomFileName();
+            model.FileLength = r.Next(1, 1000);
+            model.RecordCount = r.Next(1, 1000);
+            return model;
+        }
+
         public static ProjectModel CreateProjectModel()
         {
             Random r = new Random();

@@ -38,7 +38,7 @@ namespace Test.IISLogReader.BLL.Repositories
         }
 
         /// <summary>
-        /// Tests that the insert actually works
+        /// Tests that the GetAll method loads data in an ordered format
         /// </summary>
         [Test]
         public void GetAll_Integration_ReturnsData()
@@ -73,7 +73,33 @@ namespace Test.IISLogReader.BLL.Repositories
 
         }
 
+        /// <summary>
+        /// Tests that the GetById method loads a file by the correct Id
+        /// </summary>
+        [Test]
+        public void GetById_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
 
+                IProjectRepository projectRepo = new ProjectRepository(dbContext);
+
+                ProjectModel project = DataHelper.CreateProjectModel();
+
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
+                project = createProjectCommand.Execute(project);
+
+                ProjectModel result = projectRepo.GetById(project.Id);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(project.Name, result.Name);
+
+                result = projectRepo.GetById(project.Id + 1);
+                Assert.IsNull(result);
+            }
+
+        }
 
     }
 }

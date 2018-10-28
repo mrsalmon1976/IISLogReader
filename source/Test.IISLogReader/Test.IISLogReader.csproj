@@ -139,16 +139,22 @@
       <HintPath>..\packages\SystemWrapper.0.4\lib\SystemWrapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\CreateLogFileWithRequestsCommandTest.cs" />
+    <Compile Include="BLL\Commands\CreateLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />
     <Compile Include="BLL\Data\Stores\UserStoreTest.cs" />
+    <Compile Include="BLL\Repositories\LogFileRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />
+    <Compile Include="BLL\Validators\LogFileValidatorTest.cs" />
     <Compile Include="BLL\Validators\ProjectValidatorTest.cs" />
     <Compile Include="BLL\Validators\UserValidatorTest.cs" />
     <Compile Include="DataHelper.cs" />
+    <Compile Include="Modules\LogFileModuleTest.cs" />
     <Compile Include="Modules\ProjectModuleTest.cs" />
     <Compile Include="Modules\UserModuleTest.cs" />
     <Compile Include="Modules\LoginModuleTest.cs" />

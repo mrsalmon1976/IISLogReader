@@ -20,6 +20,8 @@ using IISLogReader.BLL.Validators;
 using IISLogReader.BLL.Commands.Project;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Data.Repositories;
+using System.IO;
+using Tx.Windows;
 
 namespace IISLogReader.Modules
 {

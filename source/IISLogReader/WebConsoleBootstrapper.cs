@@ -88,9 +88,12 @@ namespace IISLogReader
             container.Register<IDbContext>(new SQLiteDbContext(_databasePath));
 
             // commands
+            container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
+            container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
             container.Register<ICreateProjectCommand, CreateProjectCommand>();
 
             // repositories
+            container.Register<ILogFileRepository, LogFileRepository>();
             container.Register<IProjectRepository, ProjectRepository>();
 
 

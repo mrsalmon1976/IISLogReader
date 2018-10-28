@@ -26,6 +26,7 @@ using IISLogReader.ViewModels.Project;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands.Project;
 using IISLogReader.BLL.Data.Repositories;
+using System.IO;
 
 namespace Test.IISLogReader.Modules
 {

@@ -1,6 +1,9 @@
 .btn-custom-padded {
     padding: 10px 15px 10px 15px;
 }
+.dz-error-mark {
+    background-color: #ff6961;
+}
 .menu-toggle {
     padding-top: 8px;
 }

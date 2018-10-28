@@ -15,5 +15,6 @@ namespace IISLogReader.Navigation
         public const string ProjectView = "/Content/Js/Views/ProjectView.js";
 
         public const string UserView = "/Content/Js/Views/UserView.js";
+
     }
 }

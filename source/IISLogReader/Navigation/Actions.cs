@@ -13,6 +13,24 @@ namespace IISLogReader.Navigation
             public const string Default = "/dashboard";
         }
 
+        public class LogFile
+        {
+            public static string Save()
+            {
+                return "/project/{projectId}/logfile";
+            }
+
+            public static string Save(string projectId)
+            {
+                return Actions.LogFile.Save().Replace("{projectId}", projectId);
+            }
+
+            public static string Save(int projectId)
+            {
+                return Actions.LogFile.Save().Replace("{projectId}", projectId.ToString());
+            }
+
+        }
 
         public class Login
         {
@@ -22,7 +40,7 @@ namespace IISLogReader.Navigation
 
         public class Project
         {
-            public const string Save = "/project/save"; 
+            public const string Save = "/project/save";
 
             public static string View()
             {
