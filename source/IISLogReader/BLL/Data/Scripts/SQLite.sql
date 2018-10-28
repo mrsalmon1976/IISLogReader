@@ -33,5 +33,9 @@ CREATE TABLE IF NOT EXISTS Requests (
 	BytesReceived INTEGER NULL,
 	TimeTaken INTEGER NULL,
 	ProtocolVersion text NULL,
+	Host text NULL,
+	UserAgent text NULL,
+	Cookie text NULL,
+	Referer text NULL,
 	FOREIGN KEY(LogFileId) REFERENCES LogFiles(Id)
 );

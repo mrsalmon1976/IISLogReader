@@ -11,10 +11,11 @@
         }
     });
 
-    $("#dz-project-files").dropzone({
+    // set up dropzone
+    Dropzone.autoDiscover = false;
+    var myDropzone = new Dropzone("#dz-project-files", {
         error: function (file, response)
         {
-            debugger;
             $(file.previewElement).addClass("dz-error").find('.dz-error-message').text(response);
         }
     });

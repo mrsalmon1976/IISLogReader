@@ -171,6 +171,7 @@
     <Compile Include="BLL\Security\PasswordProvider.cs" />
     <Compile Include="BLL\Security\Roles.cs" />
     <Compile Include="BLL\Security\UserIdentity.cs" />
+    <Compile Include="BLL\Utils\NumericUtils.cs" />
     <Compile Include="BLL\Utils\ParsedAssemblyQualifiedName.cs" />
     <Compile Include="BLL\Validators\RequestValidator.cs" />
     <Compile Include="BLL\Validators\LogFileValidator.cs" />
