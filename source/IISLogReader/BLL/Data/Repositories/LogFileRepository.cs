@@ -11,6 +11,8 @@ namespace IISLogReader.BLL.Data.Repositories
     {
         LogFileModel GetByHash(int projectId, string md5Hash);
 
+        IEnumerable<LogFileModel> GetByProject(int projectId);
+
     }
     public class LogFileRepository : ILogFileRepository
     {
@@ -24,6 +26,12 @@ namespace IISLogReader.BLL.Data.Repositories
         {
             const string sql = "SELECT * FROM LogFiles WHERE ProjectId = @ProjectId AND FileHash = @Hash";
             return _dbContext.Query<LogFileModel>(sql, new { ProjectId = projectId, Hash = md5Hash}).SingleOrDefault();
+        }
+
+        public IEnumerable<LogFileModel> GetByProject(int projectId)
+        {
+            const string sql = "SELECT * FROM LogFiles WHERE ProjectId = @ProjectId";
+            return _dbContext.Query<LogFileModel>(sql, new { ProjectId = projectId });
         }
 
     }

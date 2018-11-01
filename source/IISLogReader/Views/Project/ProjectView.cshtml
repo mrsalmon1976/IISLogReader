@@ -21,13 +21,11 @@
         <div class="col-md-6">
             <h1 class="page-header">Project / @Model.ProjectName</h1>
         </div>
-    </div><!--/.row-->
-
-    <div class="row">
-        <div class="col-lg-12">
-            <button class="btn btn-success btn-custom-padded" v-on:click="onAddProjectFilesClick"><i class="fa fa-plus-circle"></i> Add files</button>
+        <div class="col-md-6 page-header-buttons">
+            <button class="btn btn-danger" aaaav-on:click="onDeleteProjectClick"><i class="fa fa-trash"></i> Delete</button>
+            <button class="btn btn-success" v-on:click="onAddProjectFilesClick"><i class="fa fa-plus-circle"></i> Add files</button>
         </div>
-    </div>
+    </div><!--/.row-->
 
     <div class="row">
         <div class="col-lg-12">
@@ -40,11 +38,7 @@
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="tab-project-files">
-                            <h4>Files</h4>
-                            <i class="fa fa-spinner fa-spin fa-3x project-spinner"></i>
-                            <div class="alert bg-danger project-error-msg hidden" role="alert"><em class="fa fa-lg fa-warning">&nbsp;</em> An error occurred loading the project. <a href="#" class="pull-right"><em class="fa fa-lg fa-close"></em></a></div>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eget rutrum purus. Donec hendrerit ante ac metus sagittis elementum. Mauris feugiat nisl sit amet neque luctus, a tincidunt odio auctor.</p>
+                            @Html.Partial("_ProjectFileTab")
                         </div>
                         <div class="tab-pane fade" id="pilltab2">
                             <h4>Tab 2</h4>
@@ -62,7 +56,7 @@
     </div>
 
     <form>
-        <input type="hidden" id="projectId" name="projectId" value="@Model.ProjectId" />
+        <input type="hidden" id="projectId" name="projectId" v-model="projectId" value="@Model.ProjectId" />
     </form>
 </div>
 

@@ -57,6 +57,21 @@ namespace IISLogReader.Navigation
                 return Actions.Project.View().Replace("{projectId}", projectId.ToString());
             }
 
+            public static string Files()
+            {
+                return "/project/{projectId}/files";
+            }
+
+            public static string Files(string projectId)
+            {
+                return Actions.Project.Files().Replace("{projectId}", projectId);
+            }
+
+            public static string Files(int projectId)
+            {
+                return Actions.Project.Files().Replace("{projectId}", projectId.ToString());
+            }
+
         }
 
         public class User

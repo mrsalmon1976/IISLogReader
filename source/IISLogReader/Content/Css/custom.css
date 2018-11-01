@@ -7,3 +7,12 @@
 .menu-toggle {
     padding-top: 8px;
 }
+.page-header-buttons button {
+    margin: 0px 0px 20px 10px;
+}
+@media only screen and (min-width: 992px) {
+    .page-header-buttons button {
+        margin: 25px 0px 0px 10px;
+        float: right !important;
+    }
+}

@@ -32,13 +32,21 @@ namespace IISLogReader.Modules
         private IProjectValidator _projectValidator;
         private ICreateProjectCommand _createProjectCommand;
         private IProjectRepository _projectRepo;
+        private ILogFileRepository _logFileRepo;
 
-        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand, IProjectRepository projectRepo)
+        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand
+            , IProjectRepository projectRepo, ILogFileRepository logFileRepo)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
             _createProjectCommand = createProjectCommand;
             _projectRepo = projectRepo;
+            _logFileRepo = logFileRepo;
+
+            Post[Actions.Project.Files()] = x =>
+            {
+                return Files(x.projectId);
+            };
 
             Get[Actions.Project.View()] = x =>
             {
@@ -51,6 +59,19 @@ namespace IISLogReader.Modules
                 return ProjectSave();
             };
 
+        }
+
+        public dynamic Files(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            IEnumerable<LogFileModel> logFiles = _logFileRepo.GetByProject(projectId);
+            return this.Response.AsJson<IEnumerable<LogFileModel>>(logFiles);
         }
 
         public dynamic ProjectSave()
