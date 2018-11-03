@@ -161,9 +161,11 @@
     <Compile Include="BLL\Data\Models\LogFileModel.cs" />
     <Compile Include="BLL\Data\Models\ProjectModel.cs" />
     <Compile Include="BLL\Data\Models\RequestModel.cs" />
+    <Compile Include="BLL\Data\Models\RequestPageLoadTimeModel.cs" />
     <Compile Include="BLL\Data\Models\UserModel.cs" />
     <Compile Include="BLL\Data\Repositories\LogFileRepository.cs" />
     <Compile Include="BLL\Data\Repositories\ProjectRepository.cs" />
+    <Compile Include="BLL\Data\Repositories\RequestRepository.cs" />
     <Compile Include="BLL\Data\Stores\UserStore.cs" />
     <Compile Include="BLL\Exceptions\ValidationException.cs" />
     <Compile Include="BLL\Security\Claims.cs" />
@@ -238,6 +240,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\Project\ProjectView.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Project\_ProjectLoadTimeTab.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\Project\_ProjectFileTab.cshtml">

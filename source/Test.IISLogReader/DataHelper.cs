@@ -44,6 +44,16 @@ namespace Test.IISLogReader
             return model;
         }
 
+        public static RequestPageLoadTimeModel CreateRequestPageLoadTimeModel()
+        {
+            Random r = new Random();
+            RequestPageLoadTimeModel model = new RequestPageLoadTimeModel();
+            model.AvgTimeTakenMilliseconds = r.Next(1, 5000);
+            model.RequestCount = r.Next(1, 1000000);
+            model.UriStem = Path.GetRandomFileName() + "/" + Path.GetRandomFileName();
+            return model;
+        }
+
         public static UserModel CreateUserModel()
         {
             UserModel model = new UserModel();

@@ -38,6 +38,7 @@ namespace Test.IISLogReader.Modules
         private IProjectValidator _projectValidator;
         private IProjectRepository _projectRepo;
         private ILogFileRepository _logFileRepo;
+        private IRequestRepository _requestRepo;
 
         [SetUp]
         public void ProjectModuleTest_SetUp()
@@ -47,6 +48,7 @@ namespace Test.IISLogReader.Modules
             _projectValidator = Substitute.For<IProjectValidator>();
             _projectRepo = Substitute.For<IProjectRepository>();
             _logFileRepo = Substitute.For<ILogFileRepository>();
+            _requestRepo = Substitute.For<IRequestRepository>();
 
             Mapper.Initialize((cfg) =>
             {
@@ -60,6 +62,72 @@ namespace Test.IISLogReader.Modules
             Mapper.Reset();
         }
 
+        #region AvgLoadTimes
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void AvgLoadTimes_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.AvgLoadTimes(projectId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _requestRepo.DidNotReceive().GetPageLoadTimes(Arg.Any<int>());
+
+        }
+
+        [Test]
+        public void AvgLoadTimes_ValidProjectId_GetsLogFilesFromDatabase()
+        {
+            int projectId = new Random().Next(1, 1000);
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+            RequestPageLoadTimeModel loadTime1 = DataHelper.CreateRequestPageLoadTimeModel();
+            RequestPageLoadTimeModel loadTime2 = DataHelper.CreateRequestPageLoadTimeModel();
+            RequestPageLoadTimeModel loadTime3 = DataHelper.CreateRequestPageLoadTimeModel();
+            _requestRepo.GetPageLoadTimes(projectId).Returns(new RequestPageLoadTimeModel[] { loadTime1, loadTime2, loadTime3 });
+
+            // execute
+            var url = Actions.Project.AvgLoadTimes(projectId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetPageLoadTimes(projectId);
+
+            IEnumerable<RequestPageLoadTimeModel> result = JsonConvert.DeserializeObject<IEnumerable<RequestPageLoadTimeModel>>(response.Body.AsString());
+            Assert.AreEqual(3, result.Count());
+
+        }
+
+        #endregion
+
         #region Files
 
         [TestCase("abc")]
@@ -69,7 +137,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -97,7 +165,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -134,7 +202,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -175,7 +243,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectSave };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -213,7 +281,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectSave };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -255,7 +323,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -283,7 +351,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -309,7 +377,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                     .RequestStartup((container, pipelines, context) => {
                     })
                 );
@@ -338,7 +406,7 @@ namespace Test.IISLogReader.Modules
             _projectRepo.GetById(project.Id).Returns(project);
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _projectRepo, _logFileRepo, _requestRepo))
                         .RootPathProvider(new TestRootPathProvider())
                         .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;

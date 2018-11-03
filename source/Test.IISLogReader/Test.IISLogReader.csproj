@@ -165,6 +165,7 @@
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />
     <Compile Include="BLL\Data\Stores\UserStoreTest.cs" />
+    <Compile Include="BLL\Repositories\RequestRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\LogFileRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />

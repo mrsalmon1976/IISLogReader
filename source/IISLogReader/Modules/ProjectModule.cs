@@ -33,19 +33,26 @@ namespace IISLogReader.Modules
         private ICreateProjectCommand _createProjectCommand;
         private IProjectRepository _projectRepo;
         private ILogFileRepository _logFileRepo;
+        private IRequestRepository _requestRepo;
 
         public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand
-            , IProjectRepository projectRepo, ILogFileRepository logFileRepo)
+            , IProjectRepository projectRepo, ILogFileRepository logFileRepo, IRequestRepository requestRepo)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
             _createProjectCommand = createProjectCommand;
             _projectRepo = projectRepo;
             _logFileRepo = logFileRepo;
+            _requestRepo = requestRepo;
 
             Post[Actions.Project.Files()] = x =>
             {
                 return Files(x.projectId);
+            };
+
+            Post[Actions.Project.AvgLoadTimes()] = x =>
+            {
+                return AvgLoadTimes(x.projectId);
             };
 
             Get[Actions.Project.View()] = x =>
@@ -59,6 +66,19 @@ namespace IISLogReader.Modules
                 return ProjectSave();
             };
 
+        }
+
+        public dynamic AvgLoadTimes(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            IEnumerable<RequestPageLoadTimeModel> loadTimes = _requestRepo.GetPageLoadTimes(projectId);
+            return this.Response.AsJson(loadTimes);
         }
 
         public dynamic Files(dynamic pId)
