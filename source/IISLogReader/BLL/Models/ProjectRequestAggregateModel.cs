@@ -4,19 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Models
+namespace IISLogReader.BLL.Models
 {
-    public class ProjectModel
+    public class ProjectRequestAggregateModel
     {
-        public ProjectModel()
+        public ProjectRequestAggregateModel()
         {
             this.CreateDate = DateTime.Now;
         }
 
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public int ProjectId { get; set; }
+
+        public string RegularExpression { get; set; }
+
+        public string AggregateTarget { get; set; }
 
         public DateTime CreateDate { get; set; }
+
     }
 }

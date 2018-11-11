@@ -1,6 +1,6 @@
 ﻿using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Data.Models;
-using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Models;
+using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -10,8 +10,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Tx.Windows;
+using IISLogReader.BLL.Services;
 
-namespace IISLogReader.BLL.Commands.Project
+namespace IISLogReader.BLL.Commands
 {
     public interface ICreateLogFileWithRequestsCommand
     {
@@ -24,13 +25,15 @@ namespace IISLogReader.BLL.Commands.Project
         private ILogFileRepository _logFileRepo;
         private ICreateLogFileCommand _createLogFileCommand;
         private ICreateRequestBatchCommand _createRequestBatchCommand;
+        private IJobRegistrationService _jobRegistrationService;
 
-        public CreateLogFileWithRequestsCommand(IDbContext dbContext, ILogFileRepository logFileRepo, ICreateLogFileCommand createLogFileCommand, ICreateRequestBatchCommand createRequestBatchCommand)
+        public CreateLogFileWithRequestsCommand(IDbContext dbContext, ILogFileRepository logFileRepo, ICreateLogFileCommand createLogFileCommand, ICreateRequestBatchCommand createRequestBatchCommand, IJobRegistrationService jobRegistrationService)
         {
             _dbContext = dbContext;
             _logFileRepo = logFileRepo;
             _createLogFileCommand = createLogFileCommand;
             _createRequestBatchCommand = createRequestBatchCommand;
+            _jobRegistrationService = jobRegistrationService;
         }
 
         public void Execute(int projectId, string fileName, Stream fileStream)
@@ -73,6 +76,9 @@ namespace IISLogReader.BLL.Commands.Project
 
             // save the requests
             _createRequestBatchCommand.Execute(logFile.Id, logEvents);
+
+            // register the job that processes the log file
+            _jobRegistrationService.RegisterAggregateRequestJob(logFile.Id);
         }
     }
 }

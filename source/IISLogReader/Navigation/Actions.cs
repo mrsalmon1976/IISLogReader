@@ -55,6 +55,21 @@ namespace IISLogReader.Navigation
                 return Actions.Project.AvgLoadTimes().Replace("{projectId}", projectId.ToString());
             }
 
+            public static string Delete()
+            {
+                return "/project/delete/{projectId}";
+            }
+
+            public static string Delete(string projectId)
+            {
+                return Actions.Project.Delete().Replace("{projectId}", projectId);
+            }
+
+            public static string Delete(int projectId)
+            {
+                return Actions.Project.Delete().Replace("{projectId}", projectId.ToString());
+            }
+
             public const string Save = "/project/save";
 
             public static string View()

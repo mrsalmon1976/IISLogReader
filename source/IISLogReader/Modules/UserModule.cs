@@ -13,7 +13,7 @@ using IISLogReader.Navigation;
 using IISLogReader.ViewModels.User;
 using IISLogReader.BLL.Data.Stores;
 using IISLogReader.ViewModels;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using AutoMapper;
 using IISLogReader.BLL.Validators;
 

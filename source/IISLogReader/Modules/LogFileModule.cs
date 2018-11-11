@@ -12,14 +12,14 @@ using IISLogReader.ViewModels.Login;
 using Nancy.Responses.Negotiation;
 using IISLogReader.ViewModels;
 using IISLogReader.BLL.Data.Stores;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using IISLogReader.ViewModels.Project;
 using AutoMapper;
 using IISLogReader.BLL.Validators;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Repositories;
 using System.IO;
 using Tx.Windows;
 

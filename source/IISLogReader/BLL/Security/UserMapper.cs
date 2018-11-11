@@ -1,7 +1,7 @@
 ﻿using Nancy;
 using Nancy.Authentication.Forms;
 using Nancy.Security;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Data.Stores;
 using System;
 using System.Collections.Generic;

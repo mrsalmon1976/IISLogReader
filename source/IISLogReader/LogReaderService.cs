@@ -7,19 +7,37 @@ using Nancy;
 using Nancy.Hosting.Self;
 using System.Net.Sockets;
 using NLog;
-using IISLogReader.Configuration; 
+using IISLogReader.Configuration;
+using Hangfire;
+using Hangfire.SQLite;
+using System.IO;
 
 namespace IISLogReader
 {
     public class LogReaderService
     {
         private NancyHost _host;
+        private BackgroundJobServer _jobServer;
         private static Logger _logger = LogManager.GetCurrentClassLogger();
 
         public void Start()
         {
             _logger.Info("IISLogReader Windows Service starting");
             IAppSettings appSettings = new AppSettings();
+
+            // make sure the data directory exists
+            Directory.CreateDirectory(appSettings.DataDirectory);
+
+            // fire up the background job processor
+            _logger.Info("Starting background job server");
+            var sqlLiteOptions = new SQLiteStorageOptions();
+            string connString = String.Format("Data Source={0}\\Data\\IISLogReaderJobs.db;Version=3;", AppDomain.CurrentDomain.BaseDirectory);
+            GlobalConfiguration.Configuration.UseSQLiteStorage(connString, sqlLiteOptions);
+            GlobalConfiguration.Configuration.UseActivator(new WebConsoleJobActivator());
+            var jobServerOptions = new BackgroundJobServerOptions { WorkerCount = 1 };
+            _jobServer = new BackgroundJobServer(jobServerOptions);
+
+            _logger.Info("Starting Nancy host");
             var hostConfiguration = new HostConfiguration
             {
                 UrlReservations = new UrlReservations() { CreateAutomatically = true }
@@ -32,9 +50,17 @@ namespace IISLogReader
 
         public void Stop()
         {
-            _logger.Info("IISLogReader Service shutting down");
+
+            // shut down the background processor
+            _logger.Info("Shutting down background job server");
+            _jobServer.Dispose();
+
+            // shut down the Nancy host
+            _logger.Info("Shutting down Nancy host");
             _host.Stop();
             _host.Dispose();
+
+            _logger.Info("IISLogReader Service stopped");
         }
     }
 }

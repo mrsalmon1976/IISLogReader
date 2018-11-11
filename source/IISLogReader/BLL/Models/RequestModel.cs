@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Models
+namespace IISLogReader.BLL.Models
 {
 
     /// <summary>
@@ -63,6 +63,11 @@ namespace IISLogReader.BLL.Data.Models
         /// The resource accessed; for example, Default.htm. (cs-uri-stem)
         /// </summary>
         public string UriStem { get; set; }
+
+        /// <summary>
+        /// Gets an aggregated UriStem so we can attempt to consolidate Uris that contain parameters
+        /// </summary>
+        public string UriStemAggregate { get; set; }
 
         /// <summary>
         /// The query, if any, the client was trying to perform. (cs-uri-query)

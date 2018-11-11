@@ -1,6 +1,6 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Validators;
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 
 namespace Test.IISLogReader.BLL.Repositories
 {
@@ -39,7 +39,7 @@ namespace Test.IISLogReader.BLL.Repositories
         /// Tests that the GetByHash method loads a file by the correct Id
         /// </summary>
         [Test]
-        public void GetById_Integration_ReturnsData()
+        public void GetByHash_Integration_ReturnsData()
         {
             string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
             string fileHash = Guid.NewGuid().ToString();
@@ -69,6 +69,37 @@ namespace Test.IISLogReader.BLL.Repositories
 
                 result = logFileRepo.GetByHash(0, fileHash);
                 Assert.IsNull(result);
+            }
+
+        }
+
+        /// <summary>
+        /// Tests that the GetById method loads a file by the correct Id
+        /// </summary>
+        [Test]
+        public void GetById_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
+                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
+                ILogFileRepository logFileRepo = new LogFileRepository(dbContext);
+
+                // create the project
+                ProjectModel project = DataHelper.CreateProjectModel();
+                project = createProjectCommand.Execute(project);
+
+                // create the log file record
+                LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                createLogFileCommand.Execute(logFile);
+
+                LogFileModel result = logFileRepo.GetById(logFile.Id);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(logFile.FileHash, result.FileHash);
             }
 
         }

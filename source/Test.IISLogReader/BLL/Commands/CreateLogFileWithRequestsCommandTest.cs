@@ -1,18 +1,19 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using System.IO;
-using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Repositories;
 using Test.IISLogReader.TestAssets;
 using IISLogReader.BLL.Exceptions;
 using Tx.Windows;
 using System.Security.Cryptography;
+using IISLogReader.BLL.Services;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -25,6 +26,7 @@ namespace Test.IISLogReader.BLL.Commands
         private ILogFileRepository _logFileRepo;
         private ICreateLogFileCommand _createLogFileCommand;
         private ICreateRequestBatchCommand _createRequestBatchCommand;
+        private IJobRegistrationService _jobRegistrationService;
 
         [SetUp]
         public void AddProjectFileCommandTest_SetUp()
@@ -33,8 +35,9 @@ namespace Test.IISLogReader.BLL.Commands
             _logFileRepo = Substitute.For<ILogFileRepository>();
             _createLogFileCommand = Substitute.For<ICreateLogFileCommand>();
             _createRequestBatchCommand = Substitute.For<ICreateRequestBatchCommand>();
+            _jobRegistrationService = Substitute.For<IJobRegistrationService>();
 
-            _createLogFileWithRequestsCommand = new CreateLogFileWithRequestsCommand(_dbContext, _logFileRepo, _createLogFileCommand, _createRequestBatchCommand);
+            _createLogFileWithRequestsCommand = new CreateLogFileWithRequestsCommand(_dbContext, _logFileRepo, _createLogFileCommand, _createRequestBatchCommand, _jobRegistrationService);
         }
 
         [TearDown]
@@ -110,6 +113,7 @@ namespace Test.IISLogReader.BLL.Commands
                 _logFileRepo.Received(1).GetByHash(projectId, Arg.Any<string>());
                 _createLogFileCommand.Received(1).Execute(Arg.Any<LogFileModel>());
                 _createRequestBatchCommand.Received(1).Execute(logFileModel.Id, Arg.Any<IEnumerable<W3CEvent>>());
+                _jobRegistrationService.Received(1).RegisterAggregateRequestJob(logFileModel.Id);
             }
         }
 

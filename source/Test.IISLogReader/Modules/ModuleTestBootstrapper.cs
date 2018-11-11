@@ -20,9 +20,9 @@ using Nancy.ViewEngines.Razor;
 using IISLogReader.BLL.Validators;
 using NUnit.Framework;
 using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Data.Repositories;
-using IISLogReader.BLL.Commands.Project;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Repositories;
+using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Models;
 
 namespace Test.IISLogReader.Modules
 {

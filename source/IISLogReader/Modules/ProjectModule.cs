@@ -12,14 +12,14 @@ using IISLogReader.ViewModels.Login;
 using Nancy.Responses.Negotiation;
 using IISLogReader.ViewModels;
 using IISLogReader.BLL.Data.Stores;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using IISLogReader.ViewModels.Project;
 using AutoMapper;
 using IISLogReader.BLL.Validators;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Data.Repositories;
+using IISLogReader.BLL.Repositories;
 using System.IO;
 using Tx.Windows;
 
@@ -31,16 +31,19 @@ namespace IISLogReader.Modules
         private IDbContext _dbContext;
         private IProjectValidator _projectValidator;
         private ICreateProjectCommand _createProjectCommand;
+        private IDeleteProjectCommand _deleteProjectCommand;
         private IProjectRepository _projectRepo;
         private ILogFileRepository _logFileRepo;
         private IRequestRepository _requestRepo;
 
-        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator, ICreateProjectCommand createProjectCommand
+        public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator
+            , ICreateProjectCommand createProjectCommand, IDeleteProjectCommand deleteProjectCommand
             , IProjectRepository projectRepo, ILogFileRepository logFileRepo, IRequestRepository requestRepo)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
             _createProjectCommand = createProjectCommand;
+            _deleteProjectCommand = deleteProjectCommand;
             _projectRepo = projectRepo;
             _logFileRepo = logFileRepo;
             _requestRepo = requestRepo;
@@ -53,6 +56,11 @@ namespace IISLogReader.Modules
             Post[Actions.Project.AvgLoadTimes()] = x =>
             {
                 return AvgLoadTimes(x.projectId);
+            };
+
+            Post[Actions.Project.Delete()] = x =>
+            {
+                return DeleteProject(x.projectId);
             };
 
             Get[Actions.Project.View()] = x =>
@@ -79,6 +87,19 @@ namespace IISLogReader.Modules
 
             IEnumerable<RequestPageLoadTimeModel> loadTimes = _requestRepo.GetPageLoadTimes(projectId);
             return this.Response.AsJson(loadTimes);
+        }
+
+        public dynamic DeleteProject(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            _deleteProjectCommand.Execute(projectId);
+            return this.Response.AsJson("");
         }
 
         public dynamic Files(dynamic pId)
@@ -130,6 +151,7 @@ namespace IISLogReader.Modules
             ProjectViewViewModel viewModel = new ProjectViewViewModel();
             viewModel.ProjectId = projectId;
             viewModel.ProjectName = project.Name;
+            viewModel.UnprocessedCount = _projectRepo.GetUnprocessedLogFileCount(projectId);
 
             AddScript(Scripts.ProjectView);
             return this.View[Views.Project.View, viewModel];

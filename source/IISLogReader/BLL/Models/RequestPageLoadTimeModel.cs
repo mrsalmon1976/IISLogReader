@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Models
+namespace IISLogReader.BLL.Models
 {
     public class RequestPageLoadTimeModel
     {
-        public string UriStem { get; set; }
+        public string UriStemAggregate { get; set; }
 
         public int RequestCount { get; set; }
 

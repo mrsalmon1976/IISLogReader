@@ -3,7 +3,7 @@ using Nancy.Authentication.Forms;
 using Nancy.Security;
 using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Security;
 using System;

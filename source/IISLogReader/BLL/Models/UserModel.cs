@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Models
+namespace IISLogReader.BLL.Models
 {
     public class UserModel
     {

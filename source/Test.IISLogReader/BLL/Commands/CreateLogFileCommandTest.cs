@@ -1,6 +1,6 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Validators;
 using System;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Exceptions;
 using System.IO;
@@ -102,6 +102,7 @@ namespace Test.IISLogReader.BLL.Commands
 
                 string fileName = dbContext.ExecuteScalar<string>("SELECT FileName FROM LogFiles WHERE Id = @Id", savedLogFile);
                 Assert.AreEqual(savedLogFile.FileName, fileName);
+                Assert.IsFalse(savedLogFile.IsProcessed);
 
             }
 

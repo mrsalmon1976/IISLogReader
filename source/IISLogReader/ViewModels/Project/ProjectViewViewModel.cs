@@ -1,4 +1,4 @@
-﻿using IISLogReader.BLL.Data.Models;
+﻿using IISLogReader.BLL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,5 +20,9 @@ namespace IISLogReader.ViewModels.Project
 
         public string ProjectName { get; set; }
 
+        /// <summary>
+        /// Gets the number of log files that still need to be processed.
+        /// </summary>
+        public int UnprocessedCount { get; set; }
     }
 }

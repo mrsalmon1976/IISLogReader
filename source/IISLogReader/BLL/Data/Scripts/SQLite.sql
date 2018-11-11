@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS LogFiles (
 	CreateDate text NOT NULL,
 	FileLength INTEGER NOT NULL,
 	RecordCount INTEGER NOT NULL,
+	IsProcessed INTEGER NOT NULL,
 	FOREIGN KEY(ProjectId) REFERENCES Project(Id)
 );
 
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS Requests (
 	ServerPort text NULL,
 	Method text NULL,
 	UriStem text NULL,
+	UriStemAggregate text NULL,
 	UriQuery text NULL,
 	ProtocolStatus text NULL,
 	BytesSent INTEGER NULL,
@@ -38,4 +40,13 @@ CREATE TABLE IF NOT EXISTS Requests (
 	Cookie text NULL,
 	Referer text NULL,
 	FOREIGN KEY(LogFileId) REFERENCES LogFiles(Id)
+);
+
+CREATE TABLE IF NOT EXISTS ProjectRequestAggregates (
+	Id INTEGER PRIMARY KEY,
+	ProjectId text NOT NULL,
+	RegularExpression text NOT NULL,
+	AggregateTarget text NULL,
+	CreateDate text NOT NULL,
+	FOREIGN KEY(ProjectId) REFERENCES Projects(Id)
 );

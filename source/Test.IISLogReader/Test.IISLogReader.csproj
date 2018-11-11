@@ -159,16 +159,23 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommandTest.cs" />
+    <Compile Include="BLL\Commands\ResetRequestAggregatesCommandTest.cs" />
+    <Compile Include="BLL\Commands\SetLogFileUnprocessedCommandTest.cs" />
+    <Compile Include="BLL\Commands\DeleteProjectCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateRequestBatchCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateLogFileWithRequestsCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />
     <Compile Include="BLL\Data\Stores\UserStoreTest.cs" />
+    <Compile Include="BLL\Repositories\ProjectRequestAggregateRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\RequestRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\LogFileRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />
+    <Compile Include="BLL\Services\RequestAggregationServiceTest.cs" />
+    <Compile Include="BLL\Validators\ProjectRequestAggregateValidatorTest.cs" />
     <Compile Include="BLL\Validators\RequestValidatorTest.cs" />
     <Compile Include="BLL\Validators\LogFileValidatorTest.cs" />
     <Compile Include="BLL\Validators\ProjectValidatorTest.cs" />
@@ -200,9 +207,7 @@
       <Name>IISLogReader</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="BLL\Services\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

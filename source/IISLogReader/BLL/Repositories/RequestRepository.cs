@@ -1,14 +1,18 @@
-﻿using IISLogReader.BLL.Data.Models;
+﻿using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Repositories
+namespace IISLogReader.BLL.Repositories
 {
     public interface IRequestRepository
     {
+
+        IEnumerable<RequestModel> GetByLogFile(int logFileId);
+
         IEnumerable<RequestPageLoadTimeModel> GetPageLoadTimes(int projectId);
     }
 
@@ -22,13 +26,23 @@ namespace IISLogReader.BLL.Data.Repositories
             _dbContext = dbContext;
         }
 
+        public IEnumerable<RequestModel> GetByLogFile(int logFileId)
+        {
+            const string sql = "SELECT * FROM Requests WHERE LogFileId = @LogFileId";
+            return _dbContext.Query<RequestModel>(sql, new { LogFileId = logFileId });
+        }
 
         public IEnumerable<RequestPageLoadTimeModel> GetPageLoadTimes(int projectId)
         {
-            const string sql = @"SELECT r.UriStem, COUNT(r.UriStem) AS RequestCount, AVG(r.TimeTaken) AS AvgTimeTakenMilliseconds FROM Requests r
+            const string sql = @"SELECT 
+                    r.UriStemAggregate
+                    , COUNT(r.UriStem) AS RequestCount
+                    , AVG(r.TimeTaken) AS AvgTimeTakenMilliseconds 
+                FROM Requests r
                 INNER JOIN LogFiles lf on r.LogFileId = lf.Id
                 WHERE lf.ProjectId = @ProjectId
-                GROUP BY r.UriStem
+                AND r.UriStemAggregate IS NOT NULL
+                GROUP BY r.UriStemAggregate
                 ORDER BY AvgTimeTakenMilliseconds DESC";
             return _dbContext.Query<RequestPageLoadTimeModel>(sql, new { ProjectId = projectId });
 

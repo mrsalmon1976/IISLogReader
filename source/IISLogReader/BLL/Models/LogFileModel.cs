@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Data.Models
+namespace IISLogReader.BLL.Models
 {
     public class LogFileModel
     {
@@ -26,5 +26,10 @@ namespace IISLogReader.BLL.Data.Models
         public int RecordCount { get; set; }
 
         public DateTime CreateDate { get; set; }
+
+        /// <summary>
+        /// Gets/sets whether the log file has been processed after loading.
+        /// </summary>
+        public bool IsProcessed { get; set; }
     }
 }

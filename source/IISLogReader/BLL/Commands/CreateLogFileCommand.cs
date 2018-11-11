@@ -1,5 +1,5 @@
 ﻿using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Exceptions;
 using IISLogReader.BLL.Validators;
 using System;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.BLL.Commands.Project
+namespace IISLogReader.BLL.Commands
 {
     public interface ICreateLogFileCommand
     {
@@ -35,7 +35,7 @@ namespace IISLogReader.BLL.Commands.Project
             }
 
             // insert new record
-            string sql = @"INSERT INTO LogFiles (ProjectId, FileName, FileHash, CreateDate, FileLength, RecordCount) VALUES (@ProjectId, @FileName, @FileHash, @CreateDate, @FileLength, @RecordCount)";
+            string sql = @"INSERT INTO LogFiles (ProjectId, FileName, FileHash, CreateDate, FileLength, RecordCount, IsProcessed) VALUES (@ProjectId, @FileName, @FileHash, @CreateDate, @FileLength, @RecordCount, @IsProcessed)";
             _dbContext.ExecuteNonQuery(sql, logFile);
 
             sql = @"select last_insert_rowid()";

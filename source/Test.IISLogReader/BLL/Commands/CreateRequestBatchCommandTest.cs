@@ -1,6 +1,6 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Validators;
 using System;
@@ -8,12 +8,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Exceptions;
 using System.IO;
 using Tx.Windows;
 using Test.IISLogReader.TestAssets;
+using IISLogReader.BLL.Services;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -65,6 +66,7 @@ namespace Test.IISLogReader.BLL.Commands
         [Test]
         public void Execute_ValidationSucceeds_BatchInserted()
         {
+            int logFileId = new Random().Next(1, 1000);
             _requestValidator.Validate(Arg.Any<RequestModel>()).Returns(new ValidationResult());
 
             using (StreamReader logStream = new StreamReader(TestAsset.ReadTextStream(TestAsset.LogFile)))
@@ -74,7 +76,7 @@ namespace Test.IISLogReader.BLL.Commands
                 Assert.Greater(eventCount, 1);
 
                 // execute
-                _createRequestBatchCommand.Execute(1, logEvents);
+                _createRequestBatchCommand.Execute(logFileId, logEvents);
 
                 // assert
                 _requestValidator.Received(eventCount).Validate(Arg.Any<RequestModel>());
@@ -122,8 +124,6 @@ namespace Test.IISLogReader.BLL.Commands
             }
 
         }
-
-
 
     }
 }

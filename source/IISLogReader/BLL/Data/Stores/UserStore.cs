@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using System;
 using System.Collections.Generic;

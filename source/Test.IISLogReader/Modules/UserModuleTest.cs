@@ -7,7 +7,7 @@ using Nancy.Testing;
 using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Security;
 using IISLogReader.BLL.Validators;

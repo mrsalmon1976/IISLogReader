@@ -16,26 +16,24 @@ using SystemWrapper.IO;
 using IISLogReader.BLL.Security;
 using Encryption;
 using AutoMapper;
-using IISLogReader.BLL.Data.Models;
+using IISLogReader.BLL.Models;
 using IISLogReader.ViewModels.User;
 using System.Diagnostics;
 using IISLogReader.BLL.Data;
 using IISLogReader.ViewModels.Project;
-using IISLogReader.BLL.Data.Repositories;
-using IISLogReader.BLL.Commands.Project;
+using IISLogReader.BLL.Repositories;
+using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Services;
+using IISLogReader.BLL.Data.Db;
 
 namespace IISLogReader
 {
 
     public class WebConsoleBootstrapper : DefaultNancyBootstrapper
     {
-        private string _databasePath = "";
-
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines)
         {
 
-            // set the location of our database
-            _databasePath = Path.Combine(AppContext.BaseDirectory, "IISLogReader.db");
             // override maximum JSON length for Nancy
             Nancy.Json.JsonSettings.MaxJsonLength = int.MaxValue;
 
@@ -60,19 +58,21 @@ namespace IISLogReader
             });
 
             // Initialise the database only on application start
-            using (IDbContext dbc = new SQLiteDbContext(_databasePath))
+            IDbContextFactory dbContextFactory = new DbContextFactory(settings);
+            container.Register<IDbContextFactory>(dbContextFactory);
+            using (IDbContext dbc = dbContextFactory.GetDbContext())
             {
                 dbc.Initialise();
             }
 
 
             // set up the repositories
-            var dataPath = Path.Combine(this.RootPathProvider.GetRootPath(), "Data");
-            var userStorePath = Path.Combine(dataPath, "users.json");
+            var userStorePath = Path.Combine(settings.DataDirectory, "users.json");
             
             IUserStore userStore = new UserStore(userStorePath, container.Resolve<IFileWrap>(), container.Resolve<IDirectoryWrap>(), container.Resolve<IPasswordProvider>());
             userStore.Load();
             container.Register<IUserStore>(userStore);
+
         }
 
         protected override void ConfigureRequestContainer(TinyIoCContainer container, NancyContext context)
@@ -85,18 +85,24 @@ namespace IISLogReader
             container.Register<IUserMapper, UserMapper>();
 
             // register database context per request
-            container.Register<IDbContext>(new SQLiteDbContext(_databasePath));
+            IDbContextFactory dbContextFactory = container.Resolve<IDbContextFactory>();
+            container.Register<IDbContext>(dbContextFactory.GetDbContext());
 
             // commands
             container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
             container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
             container.Register<ICreateProjectCommand, CreateProjectCommand>();
             container.Register<ICreateRequestBatchCommand, CreateRequestBatchCommand>();
+            container.Register<IDeleteProjectCommand, DeleteProjectCommand>();
+            container.Register<ISetLogFileUnprocessedCommand, SetLogFileUnprocessedCommand>();
 
             // repositories
             container.Register<ILogFileRepository, LogFileRepository>();
             container.Register<IProjectRepository, ProjectRepository>();
             container.Register<IRequestRepository, RequestRepository>();
+
+            // jobs
+            container.Register<IJobRegistrationService, JobRegistrationService>();
 
         }
 

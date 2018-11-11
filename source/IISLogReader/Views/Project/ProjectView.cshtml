@@ -1,6 +1,6 @@
 ﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.Project.ProjectViewViewModel>
 @using Nancy.Security
-@using IISLogReader.BLL.Data.Models
+@using IISLogReader.BLL.Models
 @using IISLogReader.Navigation
 @using IISLogReader.ViewModels
 @using IISLogReader.BLL.Utils
@@ -22,18 +22,27 @@
             <h1 class="page-header">Project / @Model.ProjectName</h1>
         </div>
         <div class="col-md-6 page-header-buttons">
-            <button class="btn btn-danger" aaaav-on:click="onDeleteProjectClick"><i class="fa fa-trash"></i> Delete</button>
+            <button class="btn btn-danger" v-on:click="onDeleteProjectClick"><i class="fa fa-trash"></i> Delete</button>
             <button class="btn btn-success" v-on:click="onAddProjectFilesClick"><i class="fa fa-plus-circle"></i> Add files</button>
         </div>
     </div><!--/.row-->
-
+    @if (Model.UnprocessedCount > 0)
+    {
+        <div id="pnl-reload" class="row">
+            <div class="col-md-12">
+                <div class="alert bg-warning" role="alert">
+                    <em class="fa fa-lg fa-warning">&nbsp;</em> @(Model.UnprocessedCount) log files for this project are still being processed, reloading in {{reloadSeconds}} seconds (<a id="a-reload-now" href="#" v-on:click="reloadPage">reload now</a>). 
+                </div>
+            </div>
+        </div><!--/.row-->
+    }
     <div class="row">
         <div class="col-lg-12">
             <div class="panel panel-default">
                 <div class="panel-body tabs">
                     <ul id="tab-project" class="nav nav-pills">
-                        <li class="active"><a href="#tab-project-files" data-toggle="tab">Files</a></li>
-                        <li><a href="#tab-loadtimes" data-toggle="tab">Load Times</a></li>
+                        <li class="active"><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
+                        <li><a href="#tab-loadtimes" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Load Times</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="tab-project-files">
