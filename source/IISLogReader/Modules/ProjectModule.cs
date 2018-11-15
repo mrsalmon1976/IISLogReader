@@ -120,14 +120,15 @@ namespace IISLogReader.Modules
             ProjectFormViewModel model = this.Bind<ProjectFormViewModel>();
             ProjectModel project = Mapper.Map<ProjectFormViewModel, ProjectModel>(model);
 
-            ValidationResult result = _projectValidator.Validate(project);
-            if (result.Success)
+            ValidationResult validationResult = _projectValidator.Validate(project);
+            if (validationResult.Success)
             {
                 _dbContext.BeginTransaction();
-                _createProjectCommand.Execute(project);
+                project = _createProjectCommand.Execute(project);
                 _dbContext.Commit();
             }
 
+            ProjectSaveResultModel result = new ProjectSaveResultModel(project.Id, validationResult.Success, validationResult.Messages.ToArray());
             return this.Response.AsJson(result);
         }
 

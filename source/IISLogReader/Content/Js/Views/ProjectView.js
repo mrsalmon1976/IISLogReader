@@ -1,11 +1,15 @@
-﻿$(document).ready(function () {
+﻿Dropzone.autoDiscover = false;
+
+$(document).ready(function () {
     var pvVue = new Vue({
         el: '#content-project-view',
         data: {
             projectId: $('#projectId').val(),
             isAvgLoadTimesLoaded: false,
             activeTab: null,
-            reloadSeconds: 30
+            reloadSeconds: 30,
+            unprocessedCount: $('#unprocessedCount').val(),
+            countdownTimer: null
         },
         methods: {
             deleteProject() {
@@ -16,17 +20,9 @@
                     dataType: "json"
                 }).done(function (response) {
                     window.location.href = '/';
-                    }).fail(function (jqXHR, textStatus) {
+                    })
+                .fail(function (jqXHR, textStatus) {
                     alert("Request failed: " + textStatus);
-                });
-            },
-            initialiseDropZone: function () {
-                // set up dropzone
-                Dropzone.autoDiscover = false;
-                var myDropzone = new Dropzone("#dz-project-files", {
-                    error: function (file, response) {
-                        $(file.previewElement).addClass("dz-error").find('.dz-error-message').text(response);
-                    }
                 });
             },
             initaliseAvgLoadTimesGrid: function (projectId) {
@@ -65,19 +61,33 @@
                         };
                     },
                     fields: [
-                        { name: "uriStem", title: "URI Stem", type: "text" },
+                        { name: "uriStemAggregate", title: "URI Stem", type: "text" },
                         { name: "requestCount", title: "Request Count", type: "number", width: 50 },
                         { name: "avgTimeTakenMilliseconds", title: "Avg Time Taken (ms)", type: "number", width: 50 }
                     ]
                 });
             },
+            initialiseDropzone: function () {
+                var that = this;
+                Dropzone.options.dropzoneFileUpload = {
+                    error: function (file, response) {
+                        $(file.previewElement).addClass("dz-error").find('.dz-error-message').text(response);
+                    },
+                    queuecomplete: function () {
+                        that.reloadAll();
+                    }
+                };
+                $('#dropzoneFileUpload').dropzone();
+
+            },
             initaliseProjectFileGrid: function (projectId) {
+                var that = this;
                 $("#grid-project-files").jsGrid({
                     width: "100%",
                     height: "440px",
                     sorting: true,
                     paging: true,
-                    autoload: true,
+                    autoload: false,
 
                     controller: {
                         loadData: function () {
@@ -87,6 +97,14 @@
                                 method: 'POST',
                                 dataType: "json"
                             }).done(function (response) {
+                                var upc = 0;
+                                for (var i = 0; i < response.length; i++) {
+                                    if (!response[i].isProcessed) {
+                                        upc++;
+                                    }
+                                }
+                                that.unprocessedCount = upc;
+                                that.initReloadCountdown();
                                 d.resolve(response);
                             });
 
@@ -114,11 +132,14 @@
                 });
             },
             initReloadCountdown: function () {
-                if ($('#pnl-reload').length) {
-                    setInterval(() => {
+                if (this.unprocessedCount > 0) {
+                    this.reloadSeconds = 30;
+                    this.countdownTimer = setInterval(() => {
                         this.reloadSeconds--;
                         if (this.reloadSeconds <= 0) {
-                            this.reloadPage();
+                            clearInterval(this.countdownTimer);
+                            this.countdownTimer = null;
+                            this.reloadAll();
                         }
                     }, 1000);
                 }
@@ -154,26 +175,29 @@
                 }
                 $("#grid-project-load-times").jsGrid("refresh");
             },
-            reloadPage: function () {
-                window.location.reload();
+            reloadAll: function () {
+                if (this.countdownTimer != null) {
+                    clearInterval(this.countdownTimer);
+                    this.countdownTimer = null;
+                }
+                $("#grid-project-files").jsGrid("loadData");
+                $("#grid-project-load-times").jsGrid("loadData");
             }
         },
         mounted: function () {
             var that = this;
+            this.initialiseDropzone();
             this.initaliseProjectFileGrid(this.projectId);
             this.initaliseAvgLoadTimesGrid(this.projectId);
-            this.initReloadCountdown();
             $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
                 that.activeTab = e.target;
                 if (that.activeTab.hash == '#tab-loadtimes') {
                     that.onLoadTimesTabShown();
                 }
             });
+            this.reloadAll();
         },
     });
-
-
-
 });
 
 

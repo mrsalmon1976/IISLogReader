@@ -188,6 +188,7 @@ namespace Test.IISLogReader.Modules
         }
 
         #endregion
+
         #region Files
 
         [TestCase("abc")]
@@ -269,6 +270,7 @@ namespace Test.IISLogReader.Modules
                 );
 
             _projectValidator.Validate(Arg.Any<ProjectModel>()).Returns(new ValidationResult());
+            _createProjectCommand.Execute(Arg.Any<ProjectModel>()).Returns(DataHelper.CreateProjectModel());
 
             foreach (string claim in Claims.AllClaims)
             {
@@ -323,7 +325,8 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
             // check the result
-            BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
+            ProjectSaveResultModel result = JsonConvert.DeserializeObject<ProjectSaveResultModel>(response.Body.AsString());
+            Assert.AreEqual(0, result.ProjectId);
             Assert.IsFalse(result.Success);
             Assert.AreEqual(1, result.Messages.Length);
 
@@ -336,7 +339,8 @@ namespace Test.IISLogReader.Modules
         public void Save_ValidProject_Saves()
         {
             // setup
-            const string projectName = "TestProject";
+            ProjectModel project = DataHelper.CreateProjectModel();
+            project.Name = "TestProject";
 
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectSave };
@@ -347,6 +351,7 @@ namespace Test.IISLogReader.Modules
                     })
                 );
 
+            _createProjectCommand.Execute(Arg.Any<ProjectModel>()).Returns(project);
             _projectValidator.Validate(Arg.Any<ProjectModel>()).Returns(new ValidationResult());
 
             // execute
@@ -354,16 +359,17 @@ namespace Test.IISLogReader.Modules
             {
                 with.HttpRequest();
                 with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
-                with.FormValue("Name", projectName);
+                with.FormValue("Name", project.Name);
             });
 
             // assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
             // check the result
-            ValidationResult result = JsonConvert.DeserializeObject<ValidationResult>(response.Body.AsString());
+            ProjectSaveResultModel result = JsonConvert.DeserializeObject<ProjectSaveResultModel>(response.Body.AsString());
             Assert.IsTrue(result.Success);
-            Assert.AreEqual(0, result.Messages.Count);
+            Assert.AreEqual(project.Id, result.ProjectId);
+            Assert.AreEqual(0, result.Messages.Length);
 
             // the project should have been added
             _createProjectCommand.Received(1).Execute(Arg.Any<ProjectModel>());

@@ -41,6 +41,7 @@ namespace IISLogReader.BLL.Commands
                 , ServerPort 
                 , Method 
                 , UriStem 
+                , UriStemAggregate
                 , UriQuery 
                 , ProtocolStatus 
                 , BytesSent 
@@ -62,6 +63,7 @@ namespace IISLogReader.BLL.Commands
                 , @ServerPort 
                 , @Method 
                 , @UriStem 
+                , @UriStemAggregate
                 , @UriQuery 
                 , @ProtocolStatus 
                 , @BytesSent 
@@ -87,6 +89,7 @@ namespace IISLogReader.BLL.Commands
                 model.ServerPort = evt.s_port;
                 model.Method = evt.cs_method;
                 model.UriStem = evt.cs_uri_stem;
+                model.UriStemAggregate = model.UriStem; // defaults to the same as UriStem to minimise updates later
                 model.UriQuery = evt.cs_uri_query;
                 model.ProtocolStatus = evt.sc_status;
                 model.BytesSent = NumericUtils.TryParse(evt.sc_bytes);

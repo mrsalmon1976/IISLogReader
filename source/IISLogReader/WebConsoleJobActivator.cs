@@ -2,6 +2,7 @@
 using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Data.Db;
+using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Services;
 using IISLogReader.Configuration;
 using Nancy.TinyIoc;
@@ -25,7 +26,15 @@ namespace IISLogReader
             _dbContextFactory = new DbContextFactory(new AppSettings());
 
             _container.Register<IDbContext>(_dbContextFactory.GetDbContext());
+
+            // repositories
+            _container.Register<ILogFileRepository, LogFileRepository>();
+            _container.Register<IProjectRequestAggregateRepository, ProjectRequestAggregateRepository>();
+            _container.Register<IRequestRepository, RequestRepository>();
+
+            // services
             _container.Register<IJobRegistrationService, JobRegistrationService>();
+            _container.Register<IRequestAggregationService, RequestAggregationService>();
 
             _container.Register<ResetRequestAggregatesCommand>();
             _container.Register<SetLogFileUnprocessedCommand>();

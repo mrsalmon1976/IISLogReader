@@ -210,6 +210,7 @@
     <Compile Include="BLL\Validators\ValidationResult.cs" />
     <Compile Include="Configuration\AppSettings.cs" />
     <Compile Include="BLL\Security\UserMapper.cs" />
+    <Compile Include="ViewModels\Project\ProjectSaveResultModel.cs" />
     <Compile Include="WebConsoleJobActivator.cs" />
     <Compile Include="Modules\DefaultModule.cs" />
     <Compile Include="Modules\DefaultSecureModule.cs" />

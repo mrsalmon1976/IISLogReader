@@ -26,7 +26,7 @@
                     //debugger;
                     if (response.success) {
                         $('#dlg-project').modal('hide');
-                        window.location.reload();
+                        window.location.href = '/project/' + response.projectId;
                     }
                     else {
                         that.showProjectValidationError(response.messages);
@@ -50,6 +50,13 @@
                 $("#project-msg-error").html(err);
                 $("#project-msg-error").removeClass('hidden');
             }
+        },
+        mounted: function () {
+            $('#dlg-project').on('shown.bs.modal', function (e) {
+                // do something...
+                //alert('shown');
+                $('#projectName').focus();
+            });
         }
     });
 });
