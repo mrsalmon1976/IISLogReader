@@ -51,7 +51,8 @@ namespace Test.IISLogReader.BLL.Repositories
                 IProjectRequestAggregateRepository projectRequestAggregateRepo = new ProjectRequestAggregateRepository(dbContext);
 
                 ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateProjectRequestAggregateCommand projectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, new ProjectRequestAggregateValidator());
+                ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = Substitute.For<ISetLogFileUnprocessedCommand>();
+                ICreateProjectRequestAggregateCommand projectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, new ProjectRequestAggregateValidator(), new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
 
                 // create the projects
                 ProjectModel projectA = DataHelper.CreateProjectModel();

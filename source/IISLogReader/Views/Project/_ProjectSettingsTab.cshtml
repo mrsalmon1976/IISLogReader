@@ -24,7 +24,57 @@
             </blockquote>
             these two URLs would be reported as one, and averages calculated on the single aggregate target.
         </p>
+        <br /><br />
         <div id="grid-settings-aggregates"></div>
+        <div class="row col-md-12" style="margin-top:15px;">
+            <button class="btn btn-success" v-on:click="onNewProjectAggregateClick"><i class="fa fa-plus-circle"></i> New aggregate</button>
+        </div>
+    </div>
+</div>
+<!-- MODAL dialog for adding a new aggregate -->
+<div class="modal fade" id="dlg-project-aggregate" tabindex="-1" role="dialog" aria-labelledby="modal-title">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Aggregate Url</h4>
+            </div>
+            <div class="modal-body">
+                <div id="project-aggregate-msg-error" class="alert alert-danger hidden" role="alert">An error occurred.</div>
+                <form id="form-project-aggregate" class="form-horizontal" role="form" method="post" onsubmit="return false">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Regular Expression</label>
+                        <div class="col-sm-9">
+                            <input id="paRegularExpression" class="form-control" placeholder="^/example/[0-9]+$" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Aggregate Target</label>
+                        <div class="col-sm-9">
+                            <input id="paAggregateTarget" class="form-control" placeholder="/example/{id}" type="text" value="">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Test it!</label>
+                        <div class="col-sm-9">
+                            <input id="paTest" class="form-control" placeholder="/example/12345" type="text" value="">
+                            <div id="project-aggregate-test" class="alert bg-primary" role="alert" style="margin-top:10px;">
+                                <em class="fa fa-lg fa-warning">&nbsp;</em> 
+                                No regular expression or test URI captured
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <i id="project-aggregate-spinner" class="hide fa fa-circle-o-notch fa-spin fa-lg fa-fw pull-right"></i>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button id="btn-submit-project-aggregate" type="button" class="btn btn-primary" v-on:click="onSaveProjectAggregateClick">Save</button>
+            </div>
+        </div>
     </div>
 </div>
 

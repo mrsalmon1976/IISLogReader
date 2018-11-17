@@ -173,7 +173,46 @@ $(document).ready(function () {
                     }
                 });
             },
-            // reloads all data on the screen
+            onNewProjectAggregateClick: function () {
+                $('#dlg-project-aggregate').modal('show');
+            },
+            onSaveProjectAggregateClick: function () {
+                var that = this;
+                $("#project-aggregate-msg-error").addClass('hidden');
+                var request = $.ajax({
+                    url: "/project/requestaggregate/save",
+                    method: "POST",
+                    data: {
+                        projectId: this.projectId,
+                        regularExpression: $('#paRegularExpression').val(),
+                        aggregateTarget: $('#paAggregateTarget').val(),
+                    },
+                    dataType: 'json',
+                    traditional: true
+                });
+
+                request.done(function (response) {
+                    if (response.success) {
+                        that.reloadAll();
+                        $('#dlg-project-aggregate').modal('hide');
+                        $('#paRegularExpression').val('');
+                        $('#paAggregateTarget').val('');
+                    }
+                    else {
+                        Utils.showError('#project-aggregate-msg-error', response.messages);
+                    }
+                });
+
+                request.fail(function (xhr, textStatus) {
+                    try {
+                        Utils.showError('#project-aggregate-msg-error', xhr.responseJSON.message);
+                    }
+                    catch (err) {
+                        Utils.showError('#project-aggregate-msg-error', 'A fatal error occurred: ' + (err === null ? 'Unknown' : err.message));
+                    }
+                });
+            },
+// reloads all data on the screen
             reloadAll: function () {
                 if (this.countdownTimer != null) {
                     clearInterval(this.countdownTimer);

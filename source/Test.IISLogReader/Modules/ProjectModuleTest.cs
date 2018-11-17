@@ -392,8 +392,8 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
             // check the result
-            ProjectSaveResultModel result = JsonConvert.DeserializeObject<ProjectSaveResultModel>(response.Body.AsString());
-            Assert.AreEqual(0, result.ProjectId);
+            SaveResultModel result = JsonConvert.DeserializeObject<SaveResultModel>(response.Body.AsString());
+            Assert.AreEqual("0", result.Id);
             Assert.IsFalse(result.Success);
             Assert.AreEqual(1, result.Messages.Length);
 
@@ -433,9 +433,9 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
             // check the result
-            ProjectSaveResultModel result = JsonConvert.DeserializeObject<ProjectSaveResultModel>(response.Body.AsString());
+            SaveResultModel result = JsonConvert.DeserializeObject<SaveResultModel>(response.Body.AsString());
             Assert.IsTrue(result.Success);
-            Assert.AreEqual(project.Id, result.ProjectId);
+            Assert.AreEqual(project.Id.ToString(), result.Id);
             Assert.AreEqual(0, result.Messages.Length);
 
             // the project should have been added

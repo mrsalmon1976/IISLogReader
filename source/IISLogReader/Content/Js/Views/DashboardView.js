@@ -29,26 +29,18 @@
                         window.location.href = '/project/' + response.projectId;
                     }
                     else {
-                        that.showProjectValidationError(response.messages);
+                        Utils.showError('#project-msg-error', response.messages);
                     }
                 });
 
                 request.fail(function (xhr, textStatus) {
                     try {
-                        that.showProjectValidationError(xhr.responseJSON.message);
+                        Utils.showError('#project-msg-error', xhr.responseJSON.message);
                     }
                     catch (err) {
-                        that.showProjectValidationError('A fatal error occurred:' + (err === null ? 'Unknown' : err.message));
+                        Utils.showError('#project-msg-error', 'A fatal error occurred: ' + (err === null ? 'Unknown' : err.message));
                     }
                 });
-            },
-            showProjectValidationError: function (error) {
-                var err = error;
-                if ($.isArray(err)) {
-                    err = Collections.displayList(err);
-                }
-                $("#project-msg-error").html(err);
-                $("#project-msg-error").removeClass('hidden');
             }
         },
         mounted: function () {

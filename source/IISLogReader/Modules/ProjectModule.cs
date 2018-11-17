@@ -148,7 +148,7 @@ namespace IISLogReader.Modules
                 _dbContext.Commit();
             }
 
-            ProjectSaveResultModel result = new ProjectSaveResultModel(project.Id, validationResult.Success, validationResult.Messages.ToArray());
+            SaveResultModel result = new SaveResultModel(project.Id.ToString(), validationResult.Success, validationResult.Messages.ToArray());
             return this.Response.AsJson(result);
         }
 

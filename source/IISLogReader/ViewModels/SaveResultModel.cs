@@ -4,23 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IISLogReader.ViewModels.Project
+namespace IISLogReader.ViewModels
 {
-    public class ProjectSaveResultModel
+    public class SaveResultModel
     {
-        public ProjectSaveResultModel()
+        public SaveResultModel()
         {
 
         }
 
-        public ProjectSaveResultModel(int projectId, bool success, string[] messages)
+        public SaveResultModel(string id, bool success, string[] messages)
         {
-            this.ProjectId = projectId;
+            this.Id = id;
             this.Success = success;
             this.Messages = messages;
         }
 
-        public int ProjectId { get; set; }
+        public string Id { get; set; }
 
         public bool Success { get; set; }
 

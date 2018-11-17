@@ -119,6 +119,14 @@ namespace IISLogReader.Navigation
 
         }
 
+        public class ProjectRequestAggregate
+        {
+            public static string Save()
+            {
+                return "/project/requestaggregate/save";
+            }
+        }
+
         public class User
         {
             public const string Default = "/user";
