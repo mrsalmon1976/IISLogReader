@@ -100,6 +100,7 @@ namespace IISLogReader
             container.Register<ILogFileRepository, LogFileRepository>();
             container.Register<IProjectRepository, ProjectRepository>();
             container.Register<IRequestRepository, RequestRepository>();
+            container.Register<IProjectRequestAggregateRepository, ProjectRequestAggregateRepository>();
 
             // jobs
             container.Register<IJobRegistrationService, JobRegistrationService>();

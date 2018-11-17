@@ -28,15 +28,6 @@ namespace IISLogReader
             // make sure the data directory exists
             Directory.CreateDirectory(appSettings.DataDirectory);
 
-            // fire up the background job processor
-            _logger.Info("Starting background job server");
-            var sqlLiteOptions = new SQLiteStorageOptions();
-            string connString = String.Format("Data Source={0}\\Data\\IISLogReaderJobs.db;Version=3;", AppDomain.CurrentDomain.BaseDirectory);
-            GlobalConfiguration.Configuration.UseSQLiteStorage(connString, sqlLiteOptions);
-            GlobalConfiguration.Configuration.UseActivator(new WebConsoleJobActivator());
-            var jobServerOptions = new BackgroundJobServerOptions { WorkerCount = 1 };
-            _jobServer = new BackgroundJobServer(jobServerOptions);
-
             _logger.Info("Starting Nancy host");
             var hostConfiguration = new HostConfiguration
             {
@@ -46,6 +37,16 @@ namespace IISLogReader
             string url = String.Format("http://localhost:{0}", appSettings.Port);
             _host = new NancyHost(hostConfiguration, new Uri(url));
             _host.Start();
+
+            // fire up the background job processor
+            _logger.Info("Starting background job server");
+            var sqlLiteOptions = new SQLiteStorageOptions();
+            string connString = String.Format("Data Source={0}\\Data\\IISLogReaderJobs.db;Version=3;", AppDomain.CurrentDomain.BaseDirectory);
+            GlobalConfiguration.Configuration.UseSQLiteStorage(connString, sqlLiteOptions);
+            GlobalConfiguration.Configuration.UseActivator(new WebConsoleJobActivator());
+            var jobServerOptions = new BackgroundJobServerOptions { WorkerCount = 1 };
+            _jobServer = new BackgroundJobServer(jobServerOptions);
+
         }
 
         public void Stop()

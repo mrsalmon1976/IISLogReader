@@ -47,19 +47,7 @@ $(document).ready(function () {
                             return d.promise();
                         }
                     },
-                    loadIndicator: function (config) {
-                        var container = config.container[0];
-                        var spinner = new Spinner();
-
-                        return {
-                            show: function () {
-                                spinner.spin(container);
-                            },
-                            hide: function () {
-                                spinner.stop();
-                            }
-                        };
-                    },
+                    loadIndicator: Utils.loadIndicator,
                     fields: [
                         { name: "uriStemAggregate", title: "URI Stem", type: "text" },
                         { name: "requestCount", title: "Request Count", type: "number", width: 50 },
@@ -111,23 +99,40 @@ $(document).ready(function () {
                             return d.promise();
                         }
                     },
-                    loadIndicator: function (config) {
-                        var container = config.container[0];
-                        var spinner = new Spinner();
-
-                        return {
-                            show: function () {
-                                spinner.spin(container);
-                            },
-                            hide: function () {
-                                spinner.stop();
-                            }
-                        };
-                    },
+                    loadIndicator: Utils.loadIndicator,
                     fields: [
                         { name: "fileName", title: "File Name", type: "text", width: 150, validate: "required" },
                         { name: "fileLength", title: "Size", type: "number", width: 50 },
                         { name: "recordCount", title: "Records", type: "number", width: 200 }
+                    ]
+                });
+            },
+            initaliseSettingsAggregatesGrid: function (projectId) {
+                var that = this;
+                $("#grid-settings-aggregates").jsGrid({
+                    width: "100%",
+                    height: "200px",
+                    sorting: true,
+                    paging: false,
+                    autoload: false,
+                    noDataContent: "No aggregates have been added to this project",
+                    controller: {
+                        loadData: function () {
+                            var d = $.Deferred();
+                            $.ajax({
+                                url: "/project/" + projectId + "/aggregates",
+                                method: 'POST',
+                                dataType: "json"
+                            }).done(function (response) {
+                                d.resolve(response);
+                            });
+                            return d.promise();
+                        }
+                    },
+                    loadIndicator: Utils.loadIndicator,
+                    fields: [
+                        { name: "regularExpression", title: "Regular Expression", type: "text", width: 150 },
+                        { name: "aggregateTarget", title: "Aggregate URI", type: "text" },
                     ]
                 });
             },
@@ -168,13 +173,7 @@ $(document).ready(function () {
                     }
                 });
             },
-            onLoadTimesTabShown: function () {
-                if (!this.isAvgLoadTimesLoaded) {
-                    $("#grid-project-load-times").jsGrid("loadData");
-                    this.isAvgLoadTimesLoaded = true;
-                }
-                $("#grid-project-load-times").jsGrid("refresh");
-            },
+            // reloads all data on the screen
             reloadAll: function () {
                 if (this.countdownTimer != null) {
                     clearInterval(this.countdownTimer);
@@ -182,19 +181,14 @@ $(document).ready(function () {
                 }
                 $("#grid-project-files").jsGrid("loadData");
                 $("#grid-project-load-times").jsGrid("loadData");
+                $("#grid-settings-aggregates").jsGrid("loadData");
             }
         },
         mounted: function () {
-            var that = this;
             this.initialiseDropzone();
             this.initaliseProjectFileGrid(this.projectId);
             this.initaliseAvgLoadTimesGrid(this.projectId);
-            $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-                that.activeTab = e.target;
-                if (that.activeTab.hash == '#tab-loadtimes') {
-                    that.onLoadTimesTabShown();
-                }
-            });
+            this.initaliseSettingsAggregatesGrid(this.projectId);
             this.reloadAll();
         },
     });

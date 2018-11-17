@@ -35,10 +35,12 @@ namespace IISLogReader.Modules
         private IProjectRepository _projectRepo;
         private ILogFileRepository _logFileRepo;
         private IRequestRepository _requestRepo;
+        private IProjectRequestAggregateRepository _projectRequestAggregateRepo;
 
         public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator
             , ICreateProjectCommand createProjectCommand, IDeleteProjectCommand deleteProjectCommand
-            , IProjectRepository projectRepo, ILogFileRepository logFileRepo, IRequestRepository requestRepo)
+            , IProjectRepository projectRepo, ILogFileRepository logFileRepo, IRequestRepository requestRepo
+            , IProjectRequestAggregateRepository projectRequestAggregateRepo)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
@@ -47,7 +49,12 @@ namespace IISLogReader.Modules
             _projectRepo = projectRepo;
             _logFileRepo = logFileRepo;
             _requestRepo = requestRepo;
+            _projectRequestAggregateRepo = projectRequestAggregateRepo;
 
+            Post[Actions.Project.Aggregates()] = x =>
+            {
+                return Aggregates(x.projectId);
+            };
             Post[Actions.Project.Files()] = x =>
             {
                 return Files(x.projectId);
@@ -74,6 +81,19 @@ namespace IISLogReader.Modules
                 return ProjectSave();
             };
 
+        }
+
+        public dynamic Aggregates(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            IEnumerable<ProjectRequestAggregateModel> aggregates = _projectRequestAggregateRepo.GetByProject(projectId);
+            return this.Response.AsJson<IEnumerable<ProjectRequestAggregateModel>>(aggregates);
         }
 
         public dynamic AvgLoadTimes(dynamic pId)

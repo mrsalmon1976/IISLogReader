@@ -1,0 +1,31 @@
+﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.Project.ProjectViewViewModel>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        URI Aggregates
+        <span class="pull-right clickable panel-toggle"><em class="fa fa-toggle-up"></em></span>
+    </div>
+    <div class="panel-body" style="display: block;">
+        <p>
+            URI Aggregates allows you to transform URI stems containing dynamic data into a single consolidated URI stem that gets reported as a single item.  By default, the following URI stems will be
+            reported separately:
+            <blockquote>
+                <code>
+                    /products/123/test<br />
+                    /products/456/test
+                </code>
+            </blockquote>
+            However, you may want these aggregated into a single item so the timings of these get consolidated into one average.  By adding the following regular expression:
+            <blockquote>
+                <code>^/products/[0-9]+/test$</code>
+            </blockquote>
+            with aggregate target:
+            <blockquote>
+                <code>/products/{id}/test</code>
+            </blockquote>
+            these two URLs would be reported as one, and averages calculated on the single aggregate target.
+        </p>
+        <div id="grid-settings-aggregates"></div>
+    </div>
+</div>
+
+

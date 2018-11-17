@@ -29,7 +29,7 @@
     <div id="pnl-reload" class="row" v-if="unprocessedCount > 0">
         <div class="col-md-12">
             <div class="alert bg-warning" role="alert">
-                <em class="fa fa-lg fa-warning">&nbsp;</em> {{ unprocessedCount }} log files for this project are still being processed, reloading in {{reloadSeconds}} seconds (<a id="a-reload-now" href="#" v-on:click="reloadAll">reload now</a>).
+                <em class="fa fa-lg fa-warning">&nbsp;</em> {{unprocessedCount}} log files for this project are still being processed, reloading in {{reloadSeconds}} seconds (<a id="a-reload-now" href="#" v-on:click="reloadAll">reload now</a>).
             </div>
         </div>
     </div><!--/.row-->
@@ -40,6 +40,7 @@
                     <ul id="tab-project" class="nav nav-pills">
                         <li class="active"><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
                         <li><a href="#tab-loadtimes" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Load Times</a></li>
+                        <li><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="tab-project-files">
@@ -47,6 +48,9 @@
                         </div>
                         <div class="tab-pane fade" id="tab-loadtimes">
                             @Html.Partial("_ProjectLoadTimeTab")
+                        </div>
+                        <div class="tab-pane fade" id="tab-settings">
+                            @Html.Partial("_ProjectSettingsTab")
                         </div>
                     </div>
                 </div>

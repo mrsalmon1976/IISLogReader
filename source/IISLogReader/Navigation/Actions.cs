@@ -40,6 +40,21 @@ namespace IISLogReader.Navigation
 
         public class Project
         {
+            public static string Aggregates()
+            {
+                return "/project/{projectId}/aggregates";
+            }
+
+            public static string Aggregates(string projectId)
+            {
+                return Actions.Project.Aggregates().Replace("{projectId}", projectId);
+            }
+
+            public static string Aggregates(int projectId)
+            {
+                return Actions.Project.Aggregates().Replace("{projectId}", projectId.ToString());
+            }
+
             public static string AvgLoadTimes()
             {
                 return "/project/{projectId}/avgloadtimes";
