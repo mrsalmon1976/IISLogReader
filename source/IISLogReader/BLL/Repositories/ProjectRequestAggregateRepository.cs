@@ -10,6 +10,8 @@ namespace IISLogReader.BLL.Repositories
 {
     public interface IProjectRequestAggregateRepository
     {
+        ProjectRequestAggregateModel GetById(int id);
+
         IEnumerable<ProjectRequestAggregateModel> GetByProject(int projectId);
 
     }
@@ -21,6 +23,13 @@ namespace IISLogReader.BLL.Repositories
         {
             _dbContext = dbContext;
         }
+
+        public ProjectRequestAggregateModel GetById(int id)
+        {
+            const string sql = "SELECT * FROM ProjectRequestAggregates WHERE Id = @Id";
+            return _dbContext.Query<ProjectRequestAggregateModel>(sql, new { Id = id }).SingleOrDefault();
+        }
+
         public IEnumerable<ProjectRequestAggregateModel> GetByProject(int projectId)
         {
             const string sql = "SELECT * FROM ProjectRequestAggregates WHERE ProjectId = @ProjectId ORDER BY Id";

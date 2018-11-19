@@ -31,11 +31,19 @@ namespace IISLogReader.Modules
 
         private IDbContext _dbContext;
         private ICreateProjectRequestAggregateCommand _createProjectRequestAggregateCommand;
+        private IDeleteProjectRequestAggregateCommand _deleteProjectRequestAggregateCommand;
 
-        public ProjectRequestAggregateModule(IDbContext dbContext, ICreateProjectRequestAggregateCommand createProjectRequestAggregateCommand)
+        public ProjectRequestAggregateModule(IDbContext dbContext, ICreateProjectRequestAggregateCommand createProjectRequestAggregateCommand, IDeleteProjectRequestAggregateCommand deleteProjectRequestAggregateCommand)
         {
             _dbContext = dbContext;
             _createProjectRequestAggregateCommand = createProjectRequestAggregateCommand;
+            _deleteProjectRequestAggregateCommand = deleteProjectRequestAggregateCommand;
+
+            Post[Actions.ProjectRequestAggregate.Delete()] = x =>
+            {
+                this.RequiresClaims(new[] { Claims.ProjectSave });
+                return DeleteAggregate();
+            };
 
             Post[Actions.ProjectRequestAggregate.Save()] = x =>
             {
@@ -43,6 +51,17 @@ namespace IISLogReader.Modules
                 return Save();
             };
 
+        }
+
+        public dynamic DeleteAggregate()
+        {
+            int id = this.Request.Form["id"];
+
+            _dbContext.BeginTransaction();
+            _deleteProjectRequestAggregateCommand.Execute(id);
+            _dbContext.Commit();
+
+            return HttpStatusCode.OK;
         }
 
         public dynamic Save()

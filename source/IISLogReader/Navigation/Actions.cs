@@ -121,6 +121,11 @@ namespace IISLogReader.Navigation
 
         public class ProjectRequestAggregate
         {
+            public static string Delete()
+            {
+                return "/project/requestaggregate/delete";
+            }
+
             public static string Save()
             {
                 return "/project/requestaggregate/save";

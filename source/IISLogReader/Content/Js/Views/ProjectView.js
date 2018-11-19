@@ -116,6 +116,7 @@ $(document).ready(function () {
                     paging: false,
                     autoload: false,
                     noDataContent: "No aggregates have been added to this project",
+                    deleteConfirm: "Are you sure you want to delete this aggregate?",
                     controller: {
                         loadData: function () {
                             var d = $.Deferred();
@@ -131,9 +132,23 @@ $(document).ready(function () {
                     },
                     loadIndicator: Utils.loadIndicator,
                     fields: [
+                        { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "regularExpression", title: "Regular Expression", type: "text", width: 150 },
                         { name: "aggregateTarget", title: "Aggregate URI", type: "text" },
-                    ]
+                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25 }
+                    ],
+                    onItemDeleting: function (args) {
+                        var id = args.item.id;
+                        $.ajax({
+                            url: "/project/requestaggregate/delete",
+                            method: "POST",
+                            data: {
+                                id: id
+                            },
+                            dataType: 'json',
+                            traditional: true
+                        });
+                    }
                 });
             },
             initReloadCountdown: function () {

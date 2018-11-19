@@ -36,12 +36,14 @@ namespace Test.IISLogReader.Modules
     {
         private IDbContext _dbContext;
         private ICreateProjectRequestAggregateCommand _createProjectRequestAggregateCommand;
+        private IDeleteProjectRequestAggregateCommand _deleteProjectRequestAggregateCommand;
 
         [SetUp]
         public void ProjectRequestAggregateModuleTest_SetUp()
         {
             _dbContext = Substitute.For<IDbContext>();
             _createProjectRequestAggregateCommand = Substitute.For<ICreateProjectRequestAggregateCommand>();
+            _deleteProjectRequestAggregateCommand = Substitute.For<IDeleteProjectRequestAggregateCommand>();
         }
 
         [TearDown]
@@ -50,8 +52,43 @@ namespace Test.IISLogReader.Modules
             Mapper.Reset();
         }
 
-        #region Save Tests
+        #region Delete Tests
 
+        [Test]
+        public void Delete_OnValidPost_ExecutesCommand()
+        {
+            int id = new Random().Next(1, 100);
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectSave };
+
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.ProjectRequestAggregate.Delete();
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                with.FormValue("id", id.ToString());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _deleteProjectRequestAggregateCommand.Received(1).Execute(id);
+            _dbContext.Received(1).Commit();
+        }
+
+
+        #endregion
+
+        #region Save Tests
 
         [Test]
         public void Save_OnSaveValidationError_ErrorReturnedInResponse()
@@ -65,7 +102,7 @@ namespace Test.IISLogReader.Modules
             _createProjectRequestAggregateCommand.When(x => x.Execute(Arg.Any<ProjectRequestAggregateModel>()))
                 .Do((c) => { throw new ValidationException(exceptionMessage); });
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand))
+                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -98,7 +135,7 @@ namespace Test.IISLogReader.Modules
             currentUser.Claims = new string[] { Claims.ProjectSave };
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand))
+                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })

@@ -34,6 +34,45 @@ namespace Test.IISLogReader.BLL.Repositories
 
         }
 
+        /// <summary>
+        /// Tests that the GetById method returns a single record
+        /// </summary>
+        [Test]
+        public void GetById_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+
+                IProjectRequestAggregateRepository projectRequestAggregateRepo = new ProjectRequestAggregateRepository(dbContext);
+
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
+                ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = Substitute.For<ISetLogFileUnprocessedCommand>();
+                ICreateProjectRequestAggregateCommand createProjectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, new ProjectRequestAggregateValidator(), new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
+                IDeleteProjectRequestAggregateCommand deleteProjectRequestAggregateCommand = new DeleteProjectRequestAggregateCommand(dbContext, projectRequestAggregateRepo, new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
+
+                // create the project
+                ProjectModel projectA = DataHelper.CreateProjectModel();
+                createProjectCommand.Execute(projectA);
+
+                // create the request aggregate record for ProjectA
+                ProjectRequestAggregateModel projectRequestAggregate = DataHelper.CreateProjectRequestAggregateModel();
+                projectRequestAggregate.ProjectId = projectA.Id;
+                createProjectRequestAggregateCommand.Execute(projectRequestAggregate);
+                int id = projectRequestAggregate.Id;
+                Assert.Greater(id, 0);
+
+                // fetch the record
+                ProjectRequestAggregateModel result = projectRequestAggregateRepo.GetById(id);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(projectRequestAggregate.Id, id);
+                Assert.AreEqual(projectRequestAggregate.RegularExpression, result.RegularExpression);
+                Assert.AreEqual(projectRequestAggregate.AggregateTarget, result.AggregateTarget);
+            }
+
+        }
 
 
         /// <summary>
