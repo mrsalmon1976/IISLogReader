@@ -26,7 +26,7 @@
                     //debugger;
                     if (response.success) {
                         $('#dlg-project').modal('hide');
-                        window.location.href = '/project/' + response.projectId;
+                        window.location.href = '/project/' + response.id;
                     }
                     else {
                         Utils.showError('#project-msg-error', response.messages);

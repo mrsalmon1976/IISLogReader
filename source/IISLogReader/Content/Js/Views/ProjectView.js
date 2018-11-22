@@ -7,7 +7,7 @@ $(document).ready(function () {
             projectId: $('#projectId').val(),
             isAvgLoadTimesLoaded: false,
             activeTab: null,
-            reloadSeconds: 30,
+            reloadSeconds: 15,
             unprocessedCount: $('#unprocessedCount').val(),
             countdownTimer: null
         },
@@ -153,7 +153,7 @@ $(document).ready(function () {
             },
             initReloadCountdown: function () {
                 if (this.unprocessedCount > 0) {
-                    this.reloadSeconds = 30;
+                    this.reloadSeconds = 15;
                     this.countdownTimer = setInterval(() => {
                         this.reloadSeconds--;
                         if (this.reloadSeconds <= 0) {
