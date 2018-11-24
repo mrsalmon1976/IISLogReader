@@ -68,7 +68,7 @@ namespace Test.IISLogReader.BLL.Security
             user.UserName = Guid.NewGuid().ToString();
             user.Password = Guid.NewGuid().ToString();
             user.Role = Roles.Admin;
-            user.Claims = new string[] { Claims.ConnectionAdd };
+            user.Claims = new string[] { Claims.ProjectEdit };
             _userStore.Users.Returns(new List<UserModel>() { user });
 
             // execute 
@@ -79,10 +79,10 @@ namespace Test.IISLogReader.BLL.Security
 
             // make sure the user has been mapped and has the supplied claim
             Assert.AreEqual(user.UserName, userIdentity.UserName);
-            Assert.Contains(Claims.ConnectionAdd, userIdentity.Claims.ToList());
+            Assert.Contains(Claims.ProjectEdit, userIdentity.Claims.ToList());
 
             // user should not have any other claims
-            foreach (string claim in Claims.AllClaims.Where(x => x != Claims.ConnectionAdd))
+            foreach (string claim in Claims.AllClaims.Where(x => x != Claims.ProjectEdit))
             {
                 Assert.Contains(claim, userIdentity.Claims.ToList());
             }

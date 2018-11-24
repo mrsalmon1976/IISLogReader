@@ -40,12 +40,13 @@ namespace IISLogReader.Modules
 
             Post[Actions.LogFile.Delete()] = x =>
             {
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return DeleteLogFile(x.logFileId);
             };
 
             Post[Actions.LogFile.Save()] = x =>
             {
-                this.RequiresClaims(new[] { Claims.ProjectSave });
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return Save();
             };
 

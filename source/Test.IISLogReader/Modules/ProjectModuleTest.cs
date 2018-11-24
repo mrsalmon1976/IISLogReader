@@ -27,6 +27,7 @@ using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Repositories;
 using System.IO;
+using System.Net.Http;
 
 namespace Test.IISLogReader.Modules
 {
@@ -131,6 +132,7 @@ namespace Test.IISLogReader.Modules
         }
 
         #endregion
+
         #region AvgLoadTimes
 
         [TestCase("abc")]
@@ -199,12 +201,32 @@ namespace Test.IISLogReader.Modules
 
         #region Delete
 
+        [Test]
+        public void Delete_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            _projectValidator.Validate(Arg.Any<ProjectModel>()).Returns(new ValidationResult());
+            _createProjectCommand.Execute(Arg.Any<ProjectModel>()).Returns(DataHelper.CreateProjectModel());
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.Project.Delete(1), HttpMethod.Post, Claims.ProjectEdit);
+        }
+
+
         [TestCase("abc")]
         [TestCase("111abc")]
         public void Delete_InvalidProjectId_Returns400(string projectId)
         {
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
                     .RequestStartup((container, pipelines, context) => {
@@ -233,6 +255,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
                     .RequestStartup((container, pipelines, context) => {
@@ -339,30 +362,7 @@ namespace Test.IISLogReader.Modules
             _projectValidator.Validate(Arg.Any<ProjectModel>()).Returns(new ValidationResult());
             _createProjectCommand.Execute(Arg.Any<ProjectModel>()).Returns(DataHelper.CreateProjectModel());
 
-            foreach (string claim in Claims.AllClaims)
-            {
-
-                currentUser.Claims = new string[] { claim };
-
-                // execute
-                var response = browser.Post(Actions.Project.Save, (with) =>
-                {
-                    with.HttpRequest();
-                    with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
-                    //with.FormValue("id", connectionId.ToString());
-                });
-
-                // assert
-                if (claim == Claims.ProjectSave)
-                {
-                    Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-                }
-                else
-                {
-                    Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
-                }
-            }
-
+            TestHelper.ValidateAuth(currentUser, browser, Actions.Project.Save, HttpMethod.Post, Claims.ProjectEdit);
         }
 
         [Test]
@@ -370,7 +370,7 @@ namespace Test.IISLogReader.Modules
         {
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
                     .RequestStartup((container, pipelines, context) => {
@@ -410,7 +410,7 @@ namespace Test.IISLogReader.Modules
             project.Name = "TestProject";
 
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
                     .RequestStartup((container, pipelines, context) => {

@@ -41,13 +41,13 @@ namespace IISLogReader.Modules
 
             Post[Actions.ProjectRequestAggregate.Delete()] = x =>
             {
-                this.RequiresClaims(new[] { Claims.ProjectSave });
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return DeleteAggregate();
             };
 
             Post[Actions.ProjectRequestAggregate.Save()] = x =>
             {
-                this.RequiresClaims(new[] { Claims.ProjectSave });
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return Save();
             };
 

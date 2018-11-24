@@ -22,6 +22,7 @@ using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace Test.IISLogReader.Modules
 {
@@ -168,6 +169,26 @@ namespace Test.IISLogReader.Modules
 
         #endregion
 
+        #region List Tests
+
+        [Test]
+        public void List_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            _userStore.Users.Returns(new List<UserModel>() { });
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.User.List, HttpMethod.Get, Claims.UserList);
+        }
+        #endregion
+
         #region Save Tests
 
         [Test]
@@ -185,30 +206,7 @@ namespace Test.IISLogReader.Modules
             _userStore.Users.Returns(new List<UserModel>() { });
             _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult());
 
-            foreach (string claim in Claims.AllClaims)
-            {
-
-                currentUser.Claims = new string[] { claim };
-
-                // execute
-                var response = browser.Post(Actions.User.Save, (with) =>
-                {
-                    with.HttpRequest();
-                    with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
-                    //with.FormValue("id", connectionId.ToString());
-                });
-
-                // assert
-                if (claim == Claims.UserAdd)
-                {
-                    Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-                }
-                else
-                {
-                    Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
-                }
-            }
-
+            TestHelper.ValidateAuth(currentUser, browser, Actions.User.Save, HttpMethod.Post, Claims.UserAdd);
         }
 
         [Test]

@@ -67,6 +67,7 @@ namespace IISLogReader.Modules
 
             Post[Actions.Project.Delete()] = x =>
             {
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return DeleteProject(x.projectId);
             };
 
@@ -77,7 +78,7 @@ namespace IISLogReader.Modules
 
             Post[Actions.Project.Save] = x =>
             {
-                this.RequiresClaims(new[] { Claims.ProjectSave });
+                this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return ProjectSave();
             };
 

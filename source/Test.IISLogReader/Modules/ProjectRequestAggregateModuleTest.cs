@@ -28,6 +28,7 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Repositories;
 using System.IO;
 using IISLogReader.BLL.Exceptions;
+using System.Net.Http;
 
 namespace Test.IISLogReader.Modules
 {
@@ -55,13 +56,29 @@ namespace Test.IISLogReader.Modules
         #region Delete Tests
 
         [Test]
+        public void Delete_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.ProjectRequestAggregate.Delete(), HttpMethod.Post, Claims.ProjectEdit);
+        }
+
+
+        [Test]
         public void Delete_OnValidPost_ExecutesCommand()
         {
             int id = new Random().Next(1, 100);
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
 
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
@@ -91,6 +108,21 @@ namespace Test.IISLogReader.Modules
         #region Save Tests
 
         [Test]
+        public void Save_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.ProjectRequestAggregate.Save(), HttpMethod.Post, Claims.ProjectEdit);
+        }
+
+        [Test]
         public void Save_OnSaveValidationError_ErrorReturnedInResponse()
         {
             int projectId = new Random().Next(1, 100);
@@ -98,7 +130,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             _createProjectRequestAggregateCommand.When(x => x.Execute(Arg.Any<ProjectRequestAggregateModel>()))
                 .Do((c) => { throw new ValidationException(exceptionMessage); });
             var browser = new Browser((bootstrapper) =>
@@ -132,7 +164,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
 
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new ProjectRequestAggregateModule(_dbContext, _createProjectRequestAggregateCommand, _deleteProjectRequestAggregateCommand))

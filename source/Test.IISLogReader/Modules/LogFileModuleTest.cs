@@ -27,6 +27,7 @@ using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Repositories;
 using System.IO;
+using System.Net.Http;
 
 namespace Test.IISLogReader.Modules
 {
@@ -53,12 +54,28 @@ namespace Test.IISLogReader.Modules
 
         #region Delete
 
+        [Test]
+        public void Delete_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.LogFile.Delete(1), HttpMethod.Post, Claims.ProjectEdit);
+        }
+
         [TestCase("abc")]
         [TestCase("111abc")]
         public void Delete_InvalidId_Returns400(string logFileId)
         {
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
                     .RequestStartup((container, pipelines, context) => {
@@ -87,6 +104,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
                     .RequestStartup((container, pipelines, context) => {
@@ -112,6 +130,21 @@ namespace Test.IISLogReader.Modules
 
         #region Save Tests
 
+        [Test]
+        public void Save_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.LogFile.Save(1), HttpMethod.Post, Claims.ProjectEdit);
+        }
+
 
         [Test]
         public void Save_OnSaveError_ErrorReturnedInResponse()
@@ -122,7 +155,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
             _createLogFileWithRequestsCommand.When(x => x.Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>()))
                 .Do((c) => { throw new Exception(exceptionMessage); });
             var browser = new Browser((bootstrapper) =>
@@ -168,7 +201,7 @@ namespace Test.IISLogReader.Modules
 
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.ProjectSave };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
 
             var browser = new Browser((bootstrapper) =>
                 bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))

@@ -12,18 +12,12 @@ namespace IISLogReader.BLL.Security
         {
             AllClaims = new List<string>(new string[] 
             { 
-                ConnectionAdd, 
-                ConnectionDelete,
-                ProjectSave,
+                ProjectEdit,
                 UserAdd,
                 UserDelete,
                 UserList
             }).AsReadOnly();
         }
-
-        public const string ConnectionAdd = "ConnectionAdd";
-
-        public const string ConnectionDelete = "ConnectionDelete";
 
         public const string UserAdd = "UserAdd";
 
@@ -31,7 +25,7 @@ namespace IISLogReader.BLL.Security
 
         public const string UserList = "UserList";
 
-        public const string ProjectSave = "ProjectSave";
+        public const string ProjectEdit = "ProjectEdit";
 
         public static IReadOnlyList<string> AllClaims { get; private set; }
     }
