@@ -47,23 +47,23 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Regular Expression</label>
                         <div class="col-sm-9">
-                            <input id="paRegularExpression" class="form-control" placeholder="^/example/[0-9]+$" type="text" value="">
+                            <input v-model="aggregateRegEx" id="paRegularExpression" class="form-control" placeholder="^/example/[0-9]+$" type="text" value="" v-on:keyup="onAggregateInputKeyUp">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Aggregate Target</label>
                         <div class="col-sm-9">
-                            <input id="paAggregateTarget" class="form-control" placeholder="/example/{id}" type="text" value="">
+                            <input v-model="aggregateTarget" id="paAggregateTarget" class="form-control" placeholder="/example/{id}" type="text" value="" v-on:keyup="onAggregateInputKeyUp">
                         </div>
                     </div>
                     <hr />
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Test it!</label>
                         <div class="col-sm-9">
-                            <input id="paTest" class="form-control" placeholder="/example/12345" type="text" value="">
+                            <input v-model="aggregateTest" id="paTest" class="form-control" placeholder="/example/12345" type="text" value="" v-on:keyup="onAggregateInputKeyUp">
                             <div id="project-aggregate-test" class="alert bg-primary" role="alert" style="margin-top:10px;">
-                                <em class="fa fa-lg fa-warning">&nbsp;</em> 
-                                No regular expression or test URI captured
+                                <em id="project-aggregate-icon" class="fa fa-lg fa-warning">&nbsp;</em> 
+                                {{aggregateTestText}}
                             </div>
                         </div>
                     </div>

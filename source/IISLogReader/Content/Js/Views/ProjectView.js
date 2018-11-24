@@ -9,7 +9,12 @@ $(document).ready(function () {
             activeTab: null,
             reloadSeconds: 15,
             unprocessedCount: $('#unprocessedCount').val(),
-            countdownTimer: null
+            countdownTimer: null,
+            aggregateRegEx: '',
+            aggregateTarget: '',
+            aggregateTest: '',
+            aggregateTestTextDefault: 'No regular expression or test URI captured',
+            aggregateTestText: this.aggregateTestTextDefault
         },
         methods: {
             deleteProject() {
@@ -185,6 +190,30 @@ $(document).ready(function () {
             onAddProjectFilesClick: function () {
                 $('#dlg-project-files').modal('show');
             },
+            onAggregateInputKeyUp: function () {
+                var eleText = $('#project-aggregate-test');
+                var eleIcon = $('#project-aggregate-icon')
+                eleText.removeClass('bg-default').removeClass('bg-success').removeClass('bg-danger');
+                eleIcon.removeClass('fa-thumbs-up').removeClass('fa-thumbs-down').removeClass('fa-warning');
+                if (this.aggregateTest.length === 0) {
+                    eleText.addClass('bg-default');
+                    eleIcon.addClass('fa-warning');
+                    this.aggregateTestText = this.aggregateTestTextDefault;
+                    return;
+                }
+
+                var re = new RegExp(this.aggregateRegEx);
+                if (re.test(this.aggregateTest)) {
+                    this.aggregateTestText = 'Woo hoo!  "' + this.aggregateTest + '" will be transformed into "' + this.aggregateTarget + '"';
+                    eleText.addClass('bg-success');
+                    eleIcon.addClass('fa-thumbs-up');
+                }
+                else {
+                    this.aggregateTestText = 'Your test doesn\'t match your regular expression';
+                    eleIcon.addClass('fa-thumbs-down');
+                    eleText.addClass('bg-danger');
+                }
+            },
             onDeleteProjectClick: function () {
                 var that = this;
                 bootbox.confirm({
@@ -217,8 +246,8 @@ $(document).ready(function () {
                     method: "POST",
                     data: {
                         projectId: this.projectId,
-                        regularExpression: $('#paRegularExpression').val(),
-                        aggregateTarget: $('#paAggregateTarget').val(),
+                        regularExpression: that.aggregateRegEx,
+                        aggregateTarget: that.aggregateTarget
                     },
                     dataType: 'json',
                     traditional: true
@@ -228,8 +257,9 @@ $(document).ready(function () {
                     if (response.success) {
                         that.reloadAll();
                         $('#dlg-project-aggregate').modal('hide');
-                        $('#paRegularExpression').val('');
-                        $('#paAggregateTarget').val('');
+                        that.aggregateRegEx = '';
+                        that.aggregateTarget = '';
+                        that.aggregateTest = '';
                     }
                     else {
                         Utils.showError('#project-aggregate-msg-error', response.messages);
