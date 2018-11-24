@@ -19,22 +19,22 @@ using IISLogReader.BLL.Services;
 namespace Test.IISLogReader.BLL.Commands
 {
     [TestFixture]
-    public class DeleteProjectCommandTest
+    public class DeleteLogFileCommandTest
     {
-        private IDeleteProjectCommand _deleteProjectCommand;
+        private IDeleteLogFileCommand _deleteLogFileCommand;
 
         private IDbContext _dbContext;
 
         [SetUp]
-        public void DeleteProjectCommandTest_SetUp()
+        public void DeleteLogFileCommandTest_SetUp()
         {
             _dbContext = Substitute.For<IDbContext>();
 
-            _deleteProjectCommand = new DeleteProjectCommand(_dbContext);
+            _deleteLogFileCommand = new DeleteLogFileCommand(_dbContext);
         }
 
         [TearDown]
-        public void DeleteProjectCommandTest_TearDown()
+        public void DeleteLogFileCommandTest_TearDown()
         {
             // delete all .db files (in case previous tests have failed)
             TestHelper.DeleteTestFiles(AppContext.BaseDirectory, "*.dbtest");
@@ -46,10 +46,10 @@ namespace Test.IISLogReader.BLL.Commands
         public void Execute_ValidationSucceeds_StatementsExecuted()
         {
             // execute
-            _deleteProjectCommand.Execute(1);
+            _deleteLogFileCommand.Execute(1);
 
             // assert
-            _dbContext.Received(4).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+            _dbContext.Received(2).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
         }
 
         /// <summary>
@@ -73,35 +73,39 @@ namespace Test.IISLogReader.BLL.Commands
                 ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
                 ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
-                IDeleteProjectCommand deleteProjectCommand = new DeleteProjectCommand(dbContext);
+                IDeleteLogFileCommand deleteLogFileCommand = new DeleteLogFileCommand(dbContext);
 
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
 
-                // create the log file
-                LogFileModel logFile = DataHelper.CreateLogFileModel();
-                logFile.ProjectId = project.Id;
-                createLogFileCommand.Execute(logFile);
+                // create 2 the log files
+                LogFileModel logFile1 = DataHelper.CreateLogFileModel();
+                logFile1.ProjectId = project.Id;
+                createLogFileCommand.Execute(logFile1);
+
+                LogFileModel logFile2 = DataHelper.CreateLogFileModel();
+                logFile2.ProjectId = project.Id;
+                createLogFileCommand.Execute(logFile2);
 
                 // create the request batch
-                createRequestBatchCommand.Execute(logFile.Id, logEvents);
+                createRequestBatchCommand.Execute(logFile1.Id, logEvents);
+                createRequestBatchCommand.Execute(logFile2.Id, logEvents);
 
-                //  run the delete command and check the end tables - should be 0 records
-                deleteProjectCommand.Execute(project.Id);
+                int rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Requests WHERE LogFileId = @LogFileId", new { LogFileId = logFile1.Id });
+                Assert.AreEqual(logEvents.Count, rowCount);
 
-                int rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM ProjectRequestAggregates");
+                //  run the delete command 
+                deleteLogFileCommand.Execute(logFile1.Id);
+
+                // there should be no requests for logFile1, but requests for logFile2 should still exist
+                rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Requests WHERE LogFileId = @LogFileId", new { LogFileId = logFile1.Id });
                 Assert.AreEqual(0, rowCount);
-
-                rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Requests");
-                Assert.AreEqual(0, rowCount);
+                rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Requests WHERE LogFileId = @LogFileId", new { LogFileId = logFile2.Id });
+                Assert.AreEqual(logEvents.Count, rowCount);
 
                 rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM LogFiles");
-                Assert.AreEqual(0, rowCount);
-
-                rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Projects");
-                Assert.AreEqual(0, rowCount);
-
+                Assert.AreEqual(1, rowCount);
 
             }
 

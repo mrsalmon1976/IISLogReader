@@ -15,6 +15,22 @@ namespace IISLogReader.Navigation
 
         public class LogFile
         {
+
+            public static string Delete()
+            {
+                return "/logfile/delete/{logfileid}";
+            }
+
+            public static string Delete(string logFileId)
+            {
+                return Actions.LogFile.Delete().Replace("{logfileid}", logFileId);
+            }
+
+            public static string Delete(int logFileId)
+            {
+                return Actions.LogFile.Delete().Replace("{logfileid}", logFileId.ToString());
+            }
+
             public static string Save()
             {
                 return "/project/{projectId}/logfile";

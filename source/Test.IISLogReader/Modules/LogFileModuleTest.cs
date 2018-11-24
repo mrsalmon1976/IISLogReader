@@ -35,12 +35,14 @@ namespace Test.IISLogReader.Modules
     {
         private IDbContext _dbContext;
         private ICreateLogFileWithRequestsCommand _createLogFileWithRequestsCommand;
+        private IDeleteLogFileCommand _deleteLogFileCommand;
 
         [SetUp]
         public void LogFileModuleTest_SetUp()
         {
             _dbContext = Substitute.For<IDbContext>();
             _createLogFileWithRequestsCommand = Substitute.For<ICreateLogFileWithRequestsCommand>();
+            _deleteLogFileCommand = Substitute.For<IDeleteLogFileCommand>();
         }
 
         [TearDown]
@@ -48,6 +50,65 @@ namespace Test.IISLogReader.Modules
         {
             Mapper.Reset();
         }
+
+        #region Delete
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void Delete_InvalidId_Returns400(string logFileId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.LogFile.Delete(logFileId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _deleteLogFileCommand.DidNotReceive().Execute(Arg.Any<int>());
+
+        }
+
+        [Test]
+        public void Delete_ValidId_DeletesProject()
+        {
+            int logFileId = new Random().Next(1, 1000);
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.LogFile.Delete(logFileId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _deleteLogFileCommand.Received(1).Execute(logFileId);
+
+        }
+
+        #endregion
 
         #region Save Tests
 
@@ -65,7 +126,7 @@ namespace Test.IISLogReader.Modules
             _createLogFileWithRequestsCommand.When(x => x.Execute(projectId, fileName, Arg.Any<HttpMultipartSubStream>()))
                 .Do((c) => { throw new Exception(exceptionMessage); });
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand))
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -110,7 +171,7 @@ namespace Test.IISLogReader.Modules
             currentUser.Claims = new string[] { Claims.ProjectSave };
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand))
+                bootstrapper.Module(new LogFileModule(_dbContext, _createLogFileWithRequestsCommand, _deleteLogFileCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })

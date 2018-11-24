@@ -30,11 +30,18 @@ namespace IISLogReader.Modules
 
         private IDbContext _dbContext;
         private ICreateLogFileWithRequestsCommand _createLogFileWithRequestsCommand;
+        private IDeleteLogFileCommand _deleteLogFileCommand;
 
-        public LogFileModule(IDbContext dbContext, ICreateLogFileWithRequestsCommand createLogFileWithRequestsCommand)
+        public LogFileModule(IDbContext dbContext, ICreateLogFileWithRequestsCommand createLogFileWithRequestsCommand, IDeleteLogFileCommand deleteLogFileCommand)
         {
             _dbContext = dbContext;
             _createLogFileWithRequestsCommand = createLogFileWithRequestsCommand;
+            _deleteLogFileCommand = deleteLogFileCommand;
+
+            Post[Actions.LogFile.Delete()] = x =>
+            {
+                return DeleteLogFile(x.logFileId);
+            };
 
             Post[Actions.LogFile.Save()] = x =>
             {
@@ -42,6 +49,19 @@ namespace IISLogReader.Modules
                 return Save();
             };
 
+        }
+
+        public dynamic DeleteLogFile(dynamic lfid)
+        {
+            // make sure the id is a valid integer
+            int logFileId = 0;
+            if (!Int32.TryParse((lfid ?? "").ToString(), out logFileId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            _deleteLogFileCommand.Execute(logFileId);
+            return this.Response.AsJson("");
         }
 
         public dynamic Save()

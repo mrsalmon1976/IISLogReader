@@ -176,6 +176,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BLL\Commands\DeleteLogFileCommand.cs" />
     <Compile Include="BLL\Commands\DeleteProjectRequestAggregateCommand.cs" />
     <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommand.cs" />
     <Compile Include="BLL\Commands\DeleteProjectCommand.cs" />

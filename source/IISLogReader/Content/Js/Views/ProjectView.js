@@ -76,6 +76,8 @@ $(document).ready(function () {
                     sorting: true,
                     paging: true,
                     autoload: false,
+                    noDataContent: "No log files have been added to this project",
+                    deleteConfirm: "Are you sure you want to delete this log file and requests from the project?",
 
                     controller: {
                         loadData: function () {
@@ -101,10 +103,26 @@ $(document).ready(function () {
                     },
                     loadIndicator: Utils.loadIndicator,
                     fields: [
+                        { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "fileName", title: "File Name", type: "text", width: 150, validate: "required" },
                         { name: "fileLength", title: "Size", type: "number", width: 50 },
-                        { name: "recordCount", title: "Records", type: "number", width: 200 }
-                    ]
+                        { name: "recordCount", title: "Records", type: "number", width: 200 },
+                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25 }
+                    ],
+                    onItemDeleting: function (args) {
+                        var id = args.item.id;
+                        $.ajax({
+                            url: "/logfile/delete/" + id,
+                            method: "POST",
+                            dataType: 'json',
+                            traditional: true
+                        }).done(function (response) {
+                            that.reloadAll();
+                        }).fail(function (jqXHR, textStatus) {
+                                alert("Failed to delete file: " + textStatus);
+                            });
+                    }
+
                 });
             },
             initaliseSettingsAggregatesGrid: function (projectId) {

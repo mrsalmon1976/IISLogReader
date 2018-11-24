@@ -159,6 +159,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\DeleteLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\DeleteProjectRequestAggregateCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommandTest.cs" />
     <Compile Include="BLL\Commands\ResetRequestAggregatesCommandTest.cs" />
