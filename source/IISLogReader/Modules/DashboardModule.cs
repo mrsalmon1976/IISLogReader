@@ -20,14 +20,16 @@ namespace IISLogReader.Modules
             Get[Actions.Dashboard.Default] = (x) =>
             {
                 AddScript(Scripts.DashboardView);
-                return this.View[Views.Dashboard.Default, this.Default()];
+                return this.Default();
             };
         }
 
-        public DashboardViewModel Default()
+        public dynamic Default()
         {
+            var currentUser = this.Context.CurrentUser;
             DashboardViewModel model = new DashboardViewModel();
-            return model;
+            model.IsProjectEditor = currentUser.HasClaim(Claims.ProjectEdit);
+            return this.View[Views.Dashboard.Default, model]; ;
 
         }
 

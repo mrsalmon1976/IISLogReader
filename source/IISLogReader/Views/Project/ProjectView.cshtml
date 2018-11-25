@@ -21,10 +21,13 @@
         <div class="col-md-6">
             <h1 class="page-header">Project / @Model.ProjectName</h1>
         </div>
-        <div class="col-md-6 page-header-buttons">
-            <button class="btn btn-danger" v-on:click="onDeleteProjectClick"><i class="fa fa-trash"></i> Delete</button>
-            <button class="btn btn-success" v-on:click="onAddProjectFilesClick"><i class="fa fa-plus-circle"></i> Add files</button>
-        </div>
+        @if (Model.IsProjectEditor)
+        {
+            <div id="project-buttons-row" class="col-md-6 page-header-buttons">
+                <button class="btn btn-danger" v-on:click="onDeleteProjectClick"><i class="fa fa-trash"></i> Delete</button>
+                <button class="btn btn-success" v-on:click="onAddProjectFilesClick"><i class="fa fa-plus-circle"></i> Add files</button>
+            </div>
+        }
     </div><!--/.row-->
     <div id="pnl-reload" class="row" v-if="unprocessedCount > 0">
         <div class="col-md-12">
@@ -40,7 +43,10 @@
                     <ul id="tab-project" class="nav nav-pills">
                         <li class="active"><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
                         <li><a href="#tab-loadtimes" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Load Times</a></li>
-                        <li><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
+                        @if (Model.IsProjectEditor)
+                        {
+                        <li id="tab-settings-pill"><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
+                        }
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="tab-project-files">
@@ -49,9 +55,12 @@
                         <div class="tab-pane fade" id="tab-loadtimes">
                             @Html.Partial("_ProjectLoadTimeTab")
                         </div>
+                        @if (Model.IsProjectEditor)
+                        {
                         <div class="tab-pane fade" id="tab-settings">
                             @Html.Partial("_ProjectSettingsTab")
                         </div>
+                        }
                     </div>
                 </div>
             </div><!--/.panel-->
@@ -62,6 +71,7 @@
     <form>
         <input type="hidden" id="projectId" name="projectId" v-model="projectId" value="@Model.ProjectId" />
         <input type="hidden" id="unprocessedCount" name="unprocessedCount" v-model="unprocessedCount" value="0" />
+        <input type="hidden" id="isProjectEditor" name="isProjectEditor" v-model="isProjectEditor" value="@(Model.IsProjectEditor)" />
     </form>
 </div>
 

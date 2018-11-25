@@ -174,6 +174,7 @@ namespace IISLogReader.Modules
             viewModel.ProjectId = projectId;
             viewModel.ProjectName = project.Name;
             viewModel.UnprocessedCount = _projectRepo.GetUnprocessedLogFileCount(projectId);
+            viewModel.IsProjectEditor = this.Context.CurrentUser.HasClaim(Claims.ProjectEdit);
 
             AddScript(Scripts.ProjectView);
             return this.View[Views.Project.View, viewModel];

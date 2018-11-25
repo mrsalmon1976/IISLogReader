@@ -14,7 +14,8 @@ $(document).ready(function () {
             aggregateTarget: '',
             aggregateTest: '',
             aggregateTestTextDefault: 'No regular expression or test URI captured',
-            aggregateTestText: this.aggregateTestTextDefault
+            aggregateTestText: this.aggregateTestTextDefault,
+            isProjectEditor: $('#isProjectEditor').val()
         },
         methods: {
             deleteProject() {
@@ -112,7 +113,7 @@ $(document).ready(function () {
                         { name: "fileName", title: "File Name", type: "text", width: 150, validate: "required" },
                         { name: "fileLength", title: "Size", type: "number", width: 50 },
                         { name: "recordCount", title: "Records", type: "number", width: 200 },
-                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25 }
+                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25, visible: this.isProjectEditor }
                     ],
                     onItemDeleting: function (args) {
                         var id = args.item.id;
@@ -158,7 +159,7 @@ $(document).ready(function () {
                         { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "regularExpression", title: "Regular Expression", type: "text", width: 150 },
                         { name: "aggregateTarget", title: "Aggregate URI", type: "text" },
-                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25 }
+                        { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25, visible: this.isProjectEditor }
                     ],
                     onItemDeleting: function (args) {
                         var id = args.item.id;
@@ -186,6 +187,18 @@ $(document).ready(function () {
                         }
                     }, 1000);
                 }
+            },
+            initTabRefreshHandlers: function () {
+                var that = this;
+                $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+                    that.activeTab = e.target;
+                    if (that.activeTab.hash === '#tab-loadtimes') {
+                        $("#grid-project-load-times").jsGrid("refresh");
+                    }
+                    else if (that.activeTab.hash === '#tab-settings') {
+                        $("#grid-settings-aggregates").jsGrid("refresh");
+                    }
+                });
             },
             onAddProjectFilesClick: function () {
                 $('#dlg-project-files').modal('show');
@@ -291,6 +304,7 @@ $(document).ready(function () {
             this.initaliseProjectFileGrid(this.projectId);
             this.initaliseAvgLoadTimesGrid(this.projectId);
             this.initaliseSettingsAggregatesGrid(this.projectId);
+            this.initTabRefreshHandlers();
             this.reloadAll();
         },
     });

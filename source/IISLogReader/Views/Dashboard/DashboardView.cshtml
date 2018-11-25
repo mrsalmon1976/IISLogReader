@@ -25,15 +25,25 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <div>Group your log files into projects to analyse different sets of data.  Files can be imported into multiple projects.</div>
+            @if (Model.IsProjectEditor)
+            {
+                <div id="dashboard-text">Group your log files into projects to analyse different sets of data.  Files can be imported into multiple projects.</div>
+            }
+            else
+            {
+                <div id="dashboard-text">Click on a project to view load times and statistics.  Speak to an administrator to create new projects.</div>
+            }
         </div>
     </div>
     <br />
-    <div class="row">
-        <div class="col-lg-12">
-            <button class="btn btn-success btn-custom-padded" v-on:click="onNewProjectClick"><i class="fa fa-plus-circle"></i> New project</button>
+    @if (Model.IsProjectEditor)
+    {
+        <div id="dashboard-buttons-row" class="row">
+            <div class="col-lg-12">
+                <button class="btn btn-success btn-custom-padded" v-on:click="onNewProjectClick"><i class="fa fa-plus-circle"></i> New project</button>
+            </div>
         </div>
-    </div>
+    }
 
     <!-- MODAL dialog for adding a new project -->
     <div class="modal fade" id="dlg-project" tabindex="-1" role="dialog" aria-labelledby="modal-title">

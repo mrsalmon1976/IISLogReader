@@ -183,6 +183,7 @@
     <Compile Include="BLL\Validators\ProjectValidatorTest.cs" />
     <Compile Include="BLL\Validators\UserValidatorTest.cs" />
     <Compile Include="DataHelper.cs" />
+    <Compile Include="Modules\DashboardModuleTest.cs" />
     <Compile Include="Modules\ProjectRequestAggregateModuleTest.cs" />
     <Compile Include="Modules\LogFileModuleTest.cs" />
     <Compile Include="Modules\ProjectModuleTest.cs" />

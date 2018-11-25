@@ -572,6 +572,85 @@ namespace Test.IISLogReader.Modules
                 
         }
 
+        [Test]
+        public void View_IsProjectEditor_ProjectEditControlsRendered()
+        {
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.ProjectEdit };
+            ProjectModel project = DataHelper.CreateProjectModel();
+            var url = Actions.Project.View(project.Id);
+
+            _projectRepo.GetById(project.Id).Returns(project);
+
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                        .RootPathProvider(new TestRootPathProvider())
+                        .RequestStartup((container, pipelines, context) => {
+                            context.CurrentUser = currentUser;
+                            context.ViewBag.CurrentUserName = currentUser.UserName;
+                            context.ViewBag.Scripts = new List<string>();
+                            context.ViewBag.Claims = new List<string>();
+                            context.ViewBag.Projects = new List<ProjectModel>();
+
+                        })
+                );
+
+            // execute
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            response.Body["#project-buttons-row"].ShouldExistOnce();
+            response.Body["#tab-settings-pill"].ShouldExistOnce();
+            response.Body["#tab-settings"].ShouldExistOnce();
+        }
+
+        [Test]
+        public void View_IsNotProjectEditor_ProjectEditControlsNotRendered()
+        {
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            ProjectModel project = DataHelper.CreateProjectModel();
+            var url = Actions.Project.View(project.Id);
+
+            _projectRepo.GetById(project.Id).Returns(project);
+
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                        .RootPathProvider(new TestRootPathProvider())
+                        .RequestStartup((container, pipelines, context) => {
+                            context.CurrentUser = currentUser;
+                            context.ViewBag.CurrentUserName = currentUser.UserName;
+                            context.ViewBag.Scripts = new List<string>();
+                            context.ViewBag.Claims = new List<string>();
+                            context.ViewBag.Projects = new List<ProjectModel>();
+
+                        })
+                );
+
+            // execute
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            response.Body["#project-buttons-row"].ShouldNotExist();
+            response.Body["#tab-settings-pill"].ShouldNotExist();
+            response.Body["#tab-settings"].ShouldNotExist();
+        }
+
         #endregion
 
     }

@@ -13,5 +13,7 @@ namespace IISLogReader.ViewModels.Dashboard
         {
         }
 
+        public bool IsProjectEditor { get; set; }
+
     }
 }

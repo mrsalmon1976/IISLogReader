@@ -24,5 +24,10 @@ namespace IISLogReader.ViewModels.Project
         /// Gets the number of log files that still need to be processed.
         /// </summary>
         public int UnprocessedCount { get; set; }
+
+        /// <summary>
+        /// Gets/sets whether the currently logged in user can edit the project.
+        /// </summary>
+        public bool IsProjectEditor { get; set; }
     }
 }
