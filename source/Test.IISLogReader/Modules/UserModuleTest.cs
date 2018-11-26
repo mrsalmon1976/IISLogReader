@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Security;
 using IISLogReader.BLL.Validators;
 using IISLogReader.Modules;
@@ -23,22 +22,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
+using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Repositories;
+using IISLogReader.BLL.Exceptions;
 
 namespace Test.IISLogReader.Modules
 {
     [TestFixture]
     public class UserModuleTest
     {
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
         private IUserValidator _userValidator;
         private IPasswordProvider _passwordProvider;
+        private ICreateUserCommand _createUserCommand;
+        private IUpdateUserPasswordCommand _updateUserPasswordCommand;
+        private IDeleteUserCommand _deleteUserCommand;
 
         [SetUp]
         public void UserModuleTest_SetUp()
         {
-            _userStore = Substitute.For<IUserStore>();
+            _userRepo = Substitute.For<IUserRepository>();
             _userValidator = Substitute.For<IUserValidator>();
             _passwordProvider = Substitute.For<IPasswordProvider>();
+            _createUserCommand = Substitute.For<ICreateUserCommand>();
+            _updateUserPasswordCommand = Substitute.For<IUpdateUserPasswordCommand>();
+            _deleteUserCommand = Substitute.For<IDeleteUserCommand>();
 
             Mapper.Initialize((cfg) =>
             {
@@ -61,7 +69,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -90,7 +98,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -125,7 +133,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -138,7 +146,7 @@ namespace Test.IISLogReader.Modules
                 Password = oldPassword
             };
             List<UserModel> users = new List<UserModel>() { user };
-            _userStore.Users.Returns(users);
+            _userRepo.GetAll().Returns(users);
 
             _passwordProvider.GenerateSalt().Returns(salt);
             _passwordProvider.HashPassword(newPassword, salt).Returns(newHashedPassword);
@@ -161,10 +169,59 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(0, result.Messages.Length);
 
             // make sure the user was updated and saved
-            Assert.AreEqual(newHashedPassword, user.Password);
-            _userStore.Received(1).Save();
-            _passwordProvider.Received(1).GenerateSalt();
-            _passwordProvider.Received(1).HashPassword(newPassword, salt);
+            _updateUserPasswordCommand.Received(1).Execute(user.UserName, newPassword);
+        }
+
+        #endregion
+
+        #region Delete Tests
+
+        [Test]
+        public void Delete_AuthTest()
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            _userRepo.GetAll().Returns(new List<UserModel>() { });
+            _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult());
+
+            TestHelper.ValidateAuth(currentUser, browser, Actions.User.Delete, HttpMethod.Post, Claims.UserDelete);
+        }
+
+        [Test]
+        public void Delete_Execute_DeletesUser()
+        {
+            Guid userId = Guid.NewGuid();
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            currentUser.Claims = new string[] { Claims.UserDelete };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var response = browser.Post(Actions.User.Delete, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                with.FormValue("Id", userId.ToString());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            _deleteUserCommand.Received(1).Execute(userId);
+
         }
 
         #endregion
@@ -177,13 +234,13 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
                 );
 
-            _userStore.Users.Returns(new List<UserModel>() { });
+            _userRepo.GetAll().Returns(new List<UserModel>() { });
 
             TestHelper.ValidateAuth(currentUser, browser, Actions.User.List, HttpMethod.Get, Claims.UserList);
         }
@@ -197,13 +254,13 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
                 );
 
-            _userStore.Users.Returns(new List<UserModel>() { });
+            _userRepo.GetAll().Returns(new List<UserModel>() { });
             _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult());
 
             TestHelper.ValidateAuth(currentUser, browser, Actions.User.Save, HttpMethod.Post, Claims.UserAdd);
@@ -216,13 +273,13 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.UserAdd };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
                 );
 
-            _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult("error"));
+            _createUserCommand.When(x => x.Execute(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>())).Throw(new ValidationException("test"));
 
             // execute
             var response = browser.Post(Actions.User.Save, (with) =>
@@ -240,7 +297,7 @@ namespace Test.IISLogReader.Modules
             BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
             Assert.IsFalse(result.Success);
             Assert.AreEqual(1, result.Messages.Length);
-            _userStore.DidNotReceive().Save();
+            _createUserCommand.Received(1).Execute(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
 
         }
 
@@ -251,7 +308,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.UserAdd };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -273,8 +330,8 @@ namespace Test.IISLogReader.Modules
             // check the result
             BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
             Assert.IsFalse(result.Success);
-            Assert.AreEqual(1, result.Messages.Length);
-            _userStore.DidNotReceive().Save();
+            Assert.IsTrue(result.Messages[0].Contains("does not match"));
+            _createUserCommand.DidNotReceive().Execute(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
 
         }
 
@@ -288,12 +345,12 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.UserAdd };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
+                bootstrapper.Module(new UserModule(_userRepo, _createUserCommand, _updateUserPasswordCommand, _deleteUserCommand))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
                 );
-            _userStore.Users.Returns(new List<UserModel>());
+            _userRepo.GetAll().Returns(new List<UserModel>());
 
             _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult());
 
@@ -314,61 +371,8 @@ namespace Test.IISLogReader.Modules
             BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
             Assert.IsTrue(result.Success);
             Assert.AreEqual(0, result.Messages.Length);
-            _userStore.Received(1).Save();
+            _createUserCommand.Received(1).Execute(userName, password, Arg.Any<string>());
 
-            // the user should have been added
-            List<UserModel> users = _userStore.Users;
-            Assert.AreEqual(1, users.Count);
-            Assert.AreEqual(userName, users[0].UserName);
-        }
-
-        [Test]
-        public void Save_ValidUser_PasswordHashed()
-        {
-            // setup
-            const string userName = "TestUser";
-            const string password = "password1";
-
-            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
-            currentUser.Claims = new string[] { Claims.UserAdd };
-            var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new UserModule(_userStore, _userValidator, _passwordProvider))
-                    .RequestStartup((container, pipelines, context) => {
-                        context.CurrentUser = currentUser;
-                    })
-                );
-            _userStore.Users.Returns(new List<UserModel>());
-
-            _userValidator.Validate(Arg.Any<UserModel>()).Returns(new ValidationResult());
-
-            string salt = Guid.NewGuid().ToString();
-            string hashedPassword = Guid.NewGuid().ToString();
-            _passwordProvider.GenerateSalt().Returns(salt);
-            _passwordProvider.HashPassword(password, salt).Returns(hashedPassword);
-
-            // execute
-            var response = browser.Post(Actions.User.Save, (with) =>
-            {
-                with.HttpRequest();
-                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
-                with.FormValue("UserName", userName);
-                with.FormValue("Password", password);
-                with.FormValue("ConfirmPassword", password);
-            });
-
-            // assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-
-            // check the result
-            BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
-            Assert.IsTrue(result.Success);
-            Assert.AreEqual(0, result.Messages.Length);
-
-            _passwordProvider.Received(1).GenerateSalt();
-            _passwordProvider.Received(1).HashPassword(password, salt);
-
-            List<UserModel> users = _userStore.Users;
-            Assert.AreEqual(hashedPassword, users[0].Password);
         }
 
         #endregion

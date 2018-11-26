@@ -1,10 +1,10 @@
 ﻿using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IISLogReader.BLL.Repositories;
 
 namespace IISLogReader.BLL.Validators
 {
@@ -15,11 +15,11 @@ namespace IISLogReader.BLL.Validators
 
     public class UserValidator : IUserValidator
     {
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
 
-        public UserValidator(IUserStore userStore)
+        public UserValidator(IUserRepository userRepo)
         {
-            this._userStore = userStore;
+            this._userRepo = userRepo;
         }
 
         public ValidationResult Validate(UserModel model)
@@ -39,7 +39,7 @@ namespace IISLogReader.BLL.Validators
                 result.Messages.Add("Role cannot be empty");
             }
 
-            UserModel existinguser = _userStore.GetUser(model.UserName);
+            UserModel existinguser = _userRepo.GetByUserName(model.UserName);
             if (existinguser != null && existinguser.Id != model.Id) 
             {
                 result.Messages.Add("A user with the supplied user name already exists.");

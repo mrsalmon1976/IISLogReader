@@ -11,30 +11,39 @@ using Nancy.Security;
 using IISLogReader.BLL.Security;
 using IISLogReader.Navigation;
 using IISLogReader.ViewModels.User;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.ViewModels;
 using IISLogReader.BLL.Models;
 using AutoMapper;
 using IISLogReader.BLL.Validators;
+using IISLogReader.BLL.Repositories;
+using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Exceptions;
 
 namespace IISLogReader.Modules
 {
     public class UserModule : DefaultSecureModule
     {
-        private IUserStore _userStore;
-        private IPasswordProvider _passwordProvider;
-        private IUserValidator _userValidator;
+        private readonly IUserRepository _userRepo;
+        private readonly ICreateUserCommand _createUserCommand;
+        private readonly IUpdateUserPasswordCommand _updateUserPasswordCommand;
+        private readonly IDeleteUserCommand _deleteUserCommand;
 
-        public UserModule(IUserStore userStore, IUserValidator userValidator, IPasswordProvider passwordProvider) : base()
+        public UserModule(IUserRepository userRepo, ICreateUserCommand createUserCommand, IUpdateUserPasswordCommand updateUserPasswordCommand, IDeleteUserCommand deleteUserCommand) : base()
         {
-            _userStore = userStore;
-            _userValidator = userValidator;
-            _passwordProvider = passwordProvider;
+            _userRepo = userRepo;
+            _createUserCommand = createUserCommand;
+            _updateUserPasswordCommand = updateUserPasswordCommand;
+            _deleteUserCommand = deleteUserCommand;
 
             Get[Actions.User.Default] = (x) =>
             {
                 AddScript(Scripts.UserView);
                 return Default();
+            };
+            Post[Actions.User.Delete] = (x) =>
+            {
+                this.RequiresClaims(new[] { Claims.UserDelete });
+                return DeleteUser();
             };
             Get[Actions.User.List] = (x) =>
             {
@@ -66,9 +75,7 @@ namespace IISLogReader.Modules
             }
 
             // all ok - update the password
-            var currentUser = _userStore.Users.Where(x => x.UserName == this.Context.CurrentUser.UserName).Single();
-            currentUser.Password = _passwordProvider.HashPassword(password, _passwordProvider.GenerateSalt());
-            _userStore.Save();
+            _updateUserPasswordCommand.Execute(this.Context.CurrentUser.UserName, password);
 
             return Response.AsJson<BasicResult>(new BasicResult(true));
         }
@@ -81,12 +88,18 @@ namespace IISLogReader.Modules
             return this.View[Views.User.Default, model];
 
         }
+        public dynamic DeleteUser()
+        {
+            Guid userId = Request.Form["id"];
+            _deleteUserCommand.Execute(userId);
+            return HttpStatusCode.OK;
+        }
 
 
         public dynamic List()
         {
             UserListViewModel model = new UserListViewModel();
-            model.Users.AddRange(_userStore.Users);
+            model.Users.AddRange(_userRepo.GetAll());
             return this.View[Views.User.ListPartial, model];
         }
 
@@ -96,32 +109,20 @@ namespace IISLogReader.Modules
             var model = this.Bind<UserViewModel>();
             UserModel user = Mapper.Map<UserViewModel, UserModel>(model);
 
-            // do first level validation - if it fails then we need to exit
-            ValidationResult validationErrors = this._userValidator.Validate(user);
-            if (model.Password != model.ConfirmPassword)
-            {
-                validationErrors.Messages.Add("Password does not match confirmation password");
-            }
-            if (validationErrors.Messages.Count > 0)
-            {
-                var vresult = new BasicResult(false, validationErrors.Messages.ToArray());
-                return Response.AsJson(vresult);
-            }
-
-            // validation is done - hash the password
-            user.Password = _passwordProvider.HashPassword(user.Password, _passwordProvider.GenerateSalt());
-
             // try and execute the command 
             BasicResult result = new BasicResult(true);
             try
             {
-                _userStore.Users.Add(user);
-                _userStore.Save();
+                if (model.Password != model.ConfirmPassword)
+                {
+                    throw new ValidationException("Password does not match confirmation password");
+                }
+                _createUserCommand.Execute(user.UserName, user.Password, user.Role);
             }
-            //catch (ValidationException vex)
-            //{
-            //    result = new BasicResult(false, vex.Errors.ToArray());
-            //}
+            catch (ValidationException vex)
+            {
+                result = new BasicResult(false, vex.ValidationErrors.ToArray());
+            }
             catch (Exception ex)
             {
                 result = new BasicResult(false, ex.Message);

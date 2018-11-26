@@ -1,13 +1,13 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
 using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IISLogReader.BLL.Repositories;
 
 namespace Test.IISLogReader.BLL.Validators
 {
@@ -16,14 +16,14 @@ namespace Test.IISLogReader.BLL.Validators
     {
         private IUserValidator _userValidator;
 
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
 
         [SetUp]
         public void UserValidatorTest_SetUp()
         {
-            _userStore = Substitute.For<IUserStore>();
+            _userRepo = Substitute.For<IUserRepository>();
 
-            _userValidator = new UserValidator(_userStore);
+            _userValidator = new UserValidator(_userRepo);
         }
 
         [TestCase("")]
@@ -76,7 +76,7 @@ namespace Test.IISLogReader.BLL.Validators
         {
             UserModel model = DataHelper.CreateUserModel();
 
-            _userStore.GetUser(model.UserName).Returns(new UserModel());
+            _userRepo.GetByUserName(model.UserName).Returns(new UserModel());
 
             ValidationResult result = _userValidator.Validate(model);
 

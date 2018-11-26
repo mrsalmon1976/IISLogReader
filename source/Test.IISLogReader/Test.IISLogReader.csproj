@@ -159,6 +159,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\DeleteUserCommandTest.cs" />
+    <Compile Include="BLL\Commands\UpdateUserPasswordCommandTest.cs" />
+    <Compile Include="BLL\Commands\CreateUserCommandTest.cs" />
     <Compile Include="BLL\Commands\DeleteLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\DeleteProjectRequestAggregateCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommandTest.cs" />
@@ -170,12 +173,13 @@
     <Compile Include="BLL\Commands\CreateLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />
-    <Compile Include="BLL\Data\Stores\UserStoreTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRequestAggregateRepositoryTest.cs" />
+    <Compile Include="BLL\Repositories\UserRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\RequestRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\LogFileRepositoryTest.cs" />
     <Compile Include="BLL\Repositories\ProjectRepositoryTest.cs" />
     <Compile Include="BLL\Security\UserMapperTest.cs" />
+    <Compile Include="BLL\Services\UserServiceTest.cs" />
     <Compile Include="BLL\Services\RequestAggregationServiceTest.cs" />
     <Compile Include="BLL\Validators\ProjectRequestAggregateValidatorTest.cs" />
     <Compile Include="BLL\Validators\RequestValidatorTest.cs" />

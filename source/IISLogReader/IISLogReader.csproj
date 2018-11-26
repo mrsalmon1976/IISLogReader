@@ -176,7 +176,9 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BLL\Commands\CreateUserCommand.cs" />
     <Compile Include="BLL\Commands\DeleteLogFileCommand.cs" />
+    <Compile Include="BLL\Commands\DeleteUserCommand.cs" />
     <Compile Include="BLL\Commands\DeleteProjectRequestAggregateCommand.cs" />
     <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommand.cs" />
     <Compile Include="BLL\Commands\DeleteProjectCommand.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="BLL\Commands\CreateProjectCommand.cs" />
     <Compile Include="BLL\Commands\SetLogFileUnprocessedCommand.cs" />
     <Compile Include="BLL\Commands\ResetRequestAggregatesCommand.cs" />
+    <Compile Include="BLL\Commands\UpdateUserPasswordCommand.cs" />
     <Compile Include="BLL\Data\Db\DbContext.cs" />
     <Compile Include="BLL\Data\Db\DbContextFactory.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContext.cs" />
@@ -198,8 +201,8 @@
     <Compile Include="BLL\Repositories\ProjectRequestAggregateRepository.cs" />
     <Compile Include="BLL\Repositories\LogFileRepository.cs" />
     <Compile Include="BLL\Repositories\ProjectRepository.cs" />
+    <Compile Include="BLL\Repositories\UserRepository.cs" />
     <Compile Include="BLL\Repositories\RequestRepository.cs" />
-    <Compile Include="BLL\Data\Stores\UserStore.cs" />
     <Compile Include="BLL\Exceptions\ValidationException.cs" />
     <Compile Include="BLL\Security\Claims.cs" />
     <Compile Include="BLL\Security\EncryptionProvider.cs" />
@@ -208,6 +211,7 @@
     <Compile Include="BLL\Security\UserIdentity.cs" />
     <Compile Include="BLL\Services\JobRegistrationService.cs" />
     <Compile Include="BLL\Services\RequestAggregationService.cs" />
+    <Compile Include="BLL\Services\UserService.cs" />
     <Compile Include="BLL\Utils\NumericUtils.cs" />
     <Compile Include="BLL\Utils\ParsedAssemblyQualifiedName.cs" />
     <Compile Include="BLL\Validators\ProjectRequestAggregateValidator.cs" />

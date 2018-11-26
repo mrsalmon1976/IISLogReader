@@ -11,7 +11,6 @@ using IISLogReader.Navigation;
 using IISLogReader.ViewModels.Login;
 using Nancy.Responses.Negotiation;
 using IISLogReader.ViewModels;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using IISLogReader.ViewModels.Project;

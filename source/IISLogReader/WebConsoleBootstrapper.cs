@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Linq;
 using IISLogReader.Configuration;
 using System.IO;
-using IISLogReader.BLL.Data.Stores;
 using SystemWrapper.IO;
 using IISLogReader.BLL.Security;
 using Encryption;
@@ -25,6 +24,7 @@ using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Services;
 using IISLogReader.BLL.Data.Db;
+using IISLogReader.BLL.Validators;
 
 namespace IISLogReader
 {
@@ -63,15 +63,13 @@ namespace IISLogReader
             using (IDbContext dbc = dbContextFactory.GetDbContext())
             {
                 dbc.Initialise();
+
+                // make sure an administrator exists
+                IUserRepository userRepo = new UserRepository(dbc);
+                IUserValidator userValidator = new UserValidator(userRepo);
+                IUserService userService = new UserService(userRepo, new CreateUserCommand(dbc, userValidator, new PasswordProvider()));
+                userService.InitialiseAdminUser();
             }
-
-
-            // set up the repositories
-            var userStorePath = Path.Combine(settings.DataDirectory, "users.json");
-            
-            IUserStore userStore = new UserStore(userStorePath, container.Resolve<IFileWrap>(), container.Resolve<IDirectoryWrap>(), container.Resolve<IPasswordProvider>());
-            userStore.Load();
-            container.Register<IUserStore>(userStore);
 
         }
 
@@ -81,32 +79,39 @@ namespace IISLogReader
             
             IAppSettings settings = container.Resolve<IAppSettings>();
 
-            // WebConsole classes and controllers
-            container.Register<IUserMapper, UserMapper>();
-
             // register database context per request
             IDbContextFactory dbContextFactory = container.Resolve<IDbContextFactory>();
             container.Register<IDbContext>(dbContextFactory.GetDbContext());
 
-            // commands
-            container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
-            container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
-            container.Register<ICreateProjectCommand, CreateProjectCommand>();
-            container.Register<ICreateRequestBatchCommand, CreateRequestBatchCommand>();
-            container.Register<ICreateProjectRequestAggregateCommand, CreateProjectRequestAggregateCommand>();
-            container.Register<IDeleteLogFileCommand, DeleteLogFileCommand>();
-            container.Register<IDeleteProjectCommand, DeleteProjectCommand>();
-            container.Register<IDeleteProjectRequestAggregateCommand, DeleteProjectRequestAggregateCommand>();
-            container.Register<ISetLogFileUnprocessedCommand, SetLogFileUnprocessedCommand>();
+            // validators
+            container.Register<IUserValidator, UserValidator>();
 
             // repositories
             container.Register<ILogFileRepository, LogFileRepository>();
             container.Register<IProjectRepository, ProjectRepository>();
             container.Register<IRequestRepository, RequestRepository>();
             container.Register<IProjectRequestAggregateRepository, ProjectRequestAggregateRepository>();
+            container.Register<IUserRepository, UserRepository>();
 
-            // jobs
+            // commands
+            container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
+            container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
+            container.Register<ICreateProjectCommand, CreateProjectCommand>();
+            container.Register<ICreateProjectRequestAggregateCommand, CreateProjectRequestAggregateCommand>();
+            container.Register<ICreateRequestBatchCommand, CreateRequestBatchCommand>();
+            container.Register<ICreateUserCommand, CreateUserCommand>();
+            container.Register<IDeleteLogFileCommand, DeleteLogFileCommand>();
+            container.Register<IDeleteProjectCommand, DeleteProjectCommand>();
+            container.Register<IDeleteProjectRequestAggregateCommand, DeleteProjectRequestAggregateCommand>();
+            container.Register<IDeleteUserCommand, DeleteUserCommand>();
+            container.Register<ISetLogFileUnprocessedCommand, SetLogFileUnprocessedCommand>();
+            container.Register<IUpdateUserPasswordCommand, UpdateUserPasswordCommand>();
+
+            // services
             container.Register<IJobRegistrationService, JobRegistrationService>();
+            container.Register<IUserService, UserService>();
+
+            container.Register<IUserMapper, UserMapper>();
 
         }
 

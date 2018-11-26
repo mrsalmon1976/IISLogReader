@@ -33,9 +33,9 @@
                             <i class="fa fa-edit"></i>
                         </a>
                         *@
-                        @if (currentUserClaims.Contains(Claims.UserDelete))
+                        @if (currentUserClaims.Contains(Claims.UserDelete) && r.UserName != "admin")
                         {
-                            <a class="btn btn-danger disabled" href="#">
+                            <a class="btn btn-danger btn-user-delete" data-id="@r.Id" data-username="@r.UserName">
                                 <i class="fa fa-trash"></i>
                             </a>
                         }

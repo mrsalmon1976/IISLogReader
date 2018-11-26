@@ -1,7 +1,6 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
 using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Validators;
 using System;
 using System.Collections.Generic;

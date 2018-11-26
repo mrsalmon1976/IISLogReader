@@ -1,5 +1,4 @@
 ﻿using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using System;
 using System.Collections.Generic;
 using System.Linq;

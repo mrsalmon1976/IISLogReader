@@ -152,6 +152,8 @@ namespace IISLogReader.Navigation
         {
             public const string Default = "/user";
 
+            public const string Delete = "/user/delete";
+
             public const string ChangePassword = "/user/changepassword";
 
             public const string List = "/user/list";

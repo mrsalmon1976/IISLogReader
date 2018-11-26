@@ -4,35 +4,36 @@ using Nancy.Security;
 using NSubstitute;
 using NUnit.Framework;
 using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IISLogReader.BLL.Repositories;
 
 namespace Test.IISLogReader.BLL.Security
 {
     [TestFixture]
     public class UserMapperTest
     {
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
         private IUserMapper _userMapper;
 
         [SetUp]
         public void UserMapperTest_SetUp()
         {
-            _userStore = Substitute.For<IUserStore>();
+            _userRepo = Substitute.For<IUserRepository>();
 
-            _userMapper = new UserMapper(_userStore);
+            _userMapper = new UserMapper(_userRepo);
         }
 
         [Test]
         public void GetUserFromIdentifier_UserNotFound_ReturnsNull()
         {
-            _userStore.Users.Returns(new List<UserModel>());
-            IUserIdentity userIdentity = _userMapper.GetUserFromIdentifier(Guid.NewGuid(), new NancyContext());
+            Guid userId = Guid.NewGuid();
+
+            IUserIdentity userIdentity = _userMapper.GetUserFromIdentifier(userId, new NancyContext());
             Assert.IsNull(userIdentity);
         }
 
@@ -44,8 +45,7 @@ namespace Test.IISLogReader.BLL.Security
             user.UserName = Guid.NewGuid().ToString();
             user.Password = Guid.NewGuid().ToString();
             user.Role = Roles.Admin;
-            user.Claims = Enumerable.Empty<string>().ToArray();
-            _userStore.Users.Returns(new List<UserModel>() { user });
+            _userRepo.GetById(user.Id).Returns(user);
 
             // execute 
             IUserIdentity userIdentity = _userMapper.GetUserFromIdentifier(user.Id, new NancyContext());
@@ -68,8 +68,7 @@ namespace Test.IISLogReader.BLL.Security
             user.UserName = Guid.NewGuid().ToString();
             user.Password = Guid.NewGuid().ToString();
             user.Role = Roles.Admin;
-            user.Claims = new string[] { Claims.ProjectEdit };
-            _userStore.Users.Returns(new List<UserModel>() { user });
+            _userRepo.GetById(user.Id).Returns(user);
 
             // execute 
             IUserIdentity userIdentity = _userMapper.GetUserFromIdentifier(user.Id, new NancyContext());

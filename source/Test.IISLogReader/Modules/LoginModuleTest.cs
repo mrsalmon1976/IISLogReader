@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using IISLogReader.BLL.Models;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Security;
 using IISLogReader.Modules;
 using IISLogReader.Navigation;
@@ -19,21 +18,21 @@ using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IISLogReader.BLL.Repositories;
 
 namespace Test.IISLogReader.Modules
 {
     [TestFixture]
     public class LoginModuleTest
     {
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
         private IPasswordProvider _passwordProvider;
 
         [SetUp]
         public void LoginModuleTest_SetUp()
         {
-            _userStore = Substitute.For<IUserStore>();
-            _userStore.Users.Returns(new List<UserModel>());
             _passwordProvider = Substitute.For<IPasswordProvider>();
+            _userRepo = Substitute.For<IUserRepository>();
         }
 
         #region LoginGet Tests
@@ -149,8 +148,6 @@ namespace Test.IISLogReader.Modules
         public void LoginPost_UserNotFound_LoginFails()
         {
             // setup
-            bool userStoreChecked = false;
-            _userStore.Users.Returns(new List<UserModel>()).AndDoes((c) => { userStoreChecked = true; });
             var browser = CreateBrowser(null);
 
             // execute
@@ -167,22 +164,19 @@ namespace Test.IISLogReader.Modules
 
             BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(userStoreChecked);
         }
 
         [Test]
         public void LoginPost_UserFoundButPasswordIncorrect_LoginFails()
         {
             // setup
-            bool userStoreChecked = false;
-            List<UserModel> users = new List<UserModel>();
-            users.Add(new UserModel()
+            UserModel user = new UserModel()
             {
                 Id = Guid.NewGuid(),
                 UserName = "admin",
                 Password = "dsdsdds"
-            });
-            _userStore.Users.Returns(users).AndDoes((c) => { userStoreChecked = true; });
+            };
+            _userRepo.GetByUserName(user.UserName).Returns(user);
 
             _passwordProvider.CheckPassword(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
 
@@ -202,32 +196,32 @@ namespace Test.IISLogReader.Modules
 
             BasicResult result = JsonConvert.DeserializeObject<BasicResult>(response.Body.AsString());
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(userStoreChecked);
+
+            _userRepo.Received(1).GetByUserName(user.UserName);
+            _passwordProvider.Received(1).CheckPassword("password", user.Password);
         }
 
         [Test]
         public void LoginPost_ValidLogin_LoginSucceeds()
         {
             // setup
-            bool userStoreChecked = false;
-            List<UserModel> users = new List<UserModel>();
-            users.Add(new UserModel()
+            UserModel user = new UserModel()
             {
                 Id = Guid.NewGuid(),
                 UserName = "admin",
                 Password = "password"
-            });
-            _userStore.Users.Returns(users).AndDoes((c) => { userStoreChecked = true; });
+            };
+            _userRepo.GetByUserName(user.UserName).Returns(user);
 
             _passwordProvider.CheckPassword(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
 
-
             var browser = new Browser((bootstrapper) =>
-                            bootstrapper.Module(new LoginModule(_userStore, _passwordProvider))
+                            bootstrapper.Module(new LoginModule(_userRepo, _passwordProvider))
                                 .RootPathProvider(new TestRootPathProvider())
-                                .RequestStartup((container, pipelines, context) => {
+                                .RequestStartup((container, pipelines, context) =>
+                                {
+                                    container.Register<IUserRepository>(Substitute.For<IUserRepository>());
                                     container.Register<IUserMapper, UserMapper>();
-                                    container.Register<IUserStore>(Substitute.For<IUserStore>());
                                     var formsAuthConfiguration = new FormsAuthenticationConfiguration()
                                     {
                                         RedirectUrl = "~/login",
@@ -249,9 +243,9 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.SeeOther, response.StatusCode);
             Assert.IsNotNull(response.Headers["Location"]);
             Assert.IsNotEmpty(response.Headers["Location"]);
-            _passwordProvider.Received(1).CheckPassword(Arg.Any<string>(), Arg.Any<string>());
-            Assert.IsTrue(userStoreChecked);
             Assert.IsEmpty(response.Body.AsString());
+            _passwordProvider.Received(1).CheckPassword("password", user.Password);
+            _userRepo.Received(1).GetByUserName(user.UserName);
         }
 
         #endregion
@@ -261,7 +255,7 @@ namespace Test.IISLogReader.Modules
         private Browser CreateBrowser(UserIdentity currentUser)
         {
             var browser = new Browser((bootstrapper) =>
-                            bootstrapper.Module(new LoginModule(_userStore, _passwordProvider))
+                            bootstrapper.Module(new LoginModule(_userRepo, _passwordProvider))
                                 .RootPathProvider(new TestRootPathProvider())
                                 .RequestStartup((container, pipelines, context) => {
                                     context.CurrentUser = currentUser;

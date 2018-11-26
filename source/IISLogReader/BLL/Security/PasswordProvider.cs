@@ -15,7 +15,7 @@ namespace IISLogReader.BLL.Security
         string HashPassword(string password, string salt);
     }
 
-    class PasswordProvider : IPasswordProvider
+    public class PasswordProvider : IPasswordProvider
     {
         public bool CheckPassword(string password, string hash)
         {

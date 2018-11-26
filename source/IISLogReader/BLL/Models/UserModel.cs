@@ -21,7 +21,7 @@ namespace IISLogReader.BLL.Models
 
         public string Role { get; set; }
 
-        public string[] Claims { get; set; }
+        //public string[] Claims { get; set; }
 
     }
 }

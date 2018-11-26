@@ -5,6 +5,23 @@ var UserView = function () {
 
     this.errorSelector = '#user-msg-error';
 
+    this.deleteUser = function () {
+        var id = $(this).data('id');
+        var userName = $(this).data('username');
+        if (confirm('Are you sure you want to delete the user \'' + userName + '\'?')) {
+            $('.btn-user-delete').off('click', that.deleteUser);
+            var request = $.ajax({
+                url: "/user/delete",
+                data: { id: id },
+                method: "POST",
+                dataType: 'html'
+            });
+            request.done(function (response) {
+                that.loadUsers();
+            });
+        }
+    };
+
     this.init = function () {
         this.loadUsers();
         $('#btn-add-user').on('click', function () { that.showForm(''); });
@@ -27,6 +44,7 @@ var UserView = function () {
         request.done(function (response) {
             //debugger;
             $('#pnl-users').html(response);
+            $('.btn-user-delete').on('click', that.deleteUser);
         });
 
         request.fail(function (xhr, textStatus, errorThrown) {

@@ -10,20 +10,20 @@ using IISLogReader.Navigation;
 using IISLogReader.ViewModels.Login;
 using Nancy.Responses.Negotiation;
 using IISLogReader.ViewModels;
-using IISLogReader.BLL.Data.Stores;
 using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
+using IISLogReader.BLL.Repositories;
 
 namespace IISLogReader.Modules
 {
     public class LoginModule : DefaultModule
     {
-        private IUserStore _userStore;
+        private IUserRepository _userRepo;
         private IPasswordProvider _passwordProvider;
 
-        public LoginModule(IUserStore userStore, IPasswordProvider passwordProvider)
+        public LoginModule(IUserRepository userRepo, IPasswordProvider passwordProvider)
         {
-            _userStore = userStore;
+            _userRepo = userRepo;
             _passwordProvider = passwordProvider;
 
             Get["/"] = x =>
@@ -72,7 +72,7 @@ namespace IISLogReader.Modules
             if ((!String.IsNullOrWhiteSpace(model.UserName)) && (!String.IsNullOrWhiteSpace(model.Password)))
             {
                 // get the user
-                UserModel user = _userStore.Users.SingleOrDefault(x => x.UserName == model.UserName);
+                UserModel user = _userRepo.GetByUserName(model.UserName);
                 if (user != null && _passwordProvider.CheckPassword(model.Password, user.Password))
                 {
                     result.Success = true;

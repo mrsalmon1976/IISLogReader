@@ -50,3 +50,10 @@ CREATE TABLE IF NOT EXISTS ProjectRequestAggregates (
 	CreateDate text NOT NULL,
 	FOREIGN KEY(ProjectId) REFERENCES Projects(Id)
 );
+
+CREATE TABLE IF NOT EXISTS Users (
+	Id UNIQUEIDENTIFIER PRIMARY KEY,
+	UserName text NOT NULL,
+	Password text NOT NULL,
+	Role text NULL
+);

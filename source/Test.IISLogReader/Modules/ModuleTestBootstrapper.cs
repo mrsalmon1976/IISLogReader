@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Linq;
 using IISLogReader.Configuration;
 using System.IO;
-using IISLogReader.BLL.Data.Stores;
 using SystemWrapper.IO;
 using IISLogReader.BLL.Security;
 using NSubstitute;
@@ -90,13 +89,13 @@ namespace Test.IISLogReader.Modules
         {
             base.ConfigureRequestContainer(container, context);
             container.Register<IUserMapper, UserMapper>();
-            container.Register<IUserStore>(Substitute.For<IUserStore>());
             container.Register<IUserValidator>(Substitute.For<IUserValidator>());
 
             // register database context per request
             container.Register<IDbContext>(Substitute.For<IDbContext>());
             container.Register<ICreateProjectCommand>(Substitute.For<ICreateProjectCommand>());
             container.Register<IProjectRepository>(Substitute.For<IProjectRepository>());
+            container.Register<IUserRepository>(Substitute.For<IUserRepository>());
 
             if (this.ConfigureRequestContainerCallback != null)
             {
