@@ -1,0 +1,36 @@
+﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IISLogReader.ViewModels.Project.RequestUriAggregateViewModel>
+@using Nancy.Security
+@using IISLogReader.BLL.Models
+@using IISLogReader.Navigation
+@using IISLogReader.ViewModels
+@using IISLogReader.BLL.Utils
+@using IISLogReader.BLL.Security
+@using System.Collections.Generic
+@{
+    Layout = "Views/Layouts/MainLayout.cshtml";
+    ViewBag.Title = "IISLogReader :: " + Model.ProjectName + " / Request Detail";
+    List<string> currentUserClaims = ViewBag.Claims;
+    List<Breadcrumb> breadcrumbs = new List<Breadcrumb>();
+    breadcrumbs.Add(new Breadcrumb("Dashboard", Actions.Dashboard.Default));
+    breadcrumbs.Add(new Breadcrumb(Model.ProjectName, Actions.Project.View(Model.ProjectId)));
+    breadcrumbs.Add(new Breadcrumb("Request Detail"));
+}
+@Html.Partial("Shared/_BreadcrumbPanel", breadcrumbs)
+
+<div id="content-uristemaggregate-view">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">Requests for "@(Model.UriStemAggregate)"</h1>
+        </div>
+    </div><!--/.row-->
+    <div class="row">
+        <div class="col-lg-12">
+            <div id="grid-uristem-aggregate"></div>
+        </div>
+    </div>
+    <form>
+        <input type="hidden" id="projectId" name="projectId" v-model="projectId" value="@Model.ProjectId" />
+        <input type="hidden" id="uri" name="uri" v-model="uri" value="@Model.UriStemAggregate" />
+    </form>
+</div>
+

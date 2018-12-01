@@ -21,6 +21,7 @@ using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Repositories;
 using System.IO;
 using Tx.Windows;
+using Newtonsoft.Json;
 
 namespace IISLogReader.Modules
 {
@@ -68,6 +69,15 @@ namespace IISLogReader.Modules
             {
                 this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return DeleteProject(x.projectId);
+            };
+
+            Get[Actions.Project.RequestsByAggregate()] = x =>
+            {
+                return RequestsByAggregate(x.projectId);
+            };
+            Post[Actions.Project.RequestsByAggregateDetail()] = x =>
+            {
+                return RequestsByAggregateDetail(x.projectId);
             };
 
             Get[Actions.Project.View()] = x =>
@@ -178,5 +188,49 @@ namespace IISLogReader.Modules
             AddScript(Scripts.ProjectView);
             return this.View[Views.Project.View, viewModel];
         }
+
+        public dynamic RequestsByAggregate(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            string uriStemAggregate = Request.Query["uri"];
+
+            // look up the project - return a 404 if we can't load it
+            ProjectModel project = _projectRepo.GetById(projectId);
+            if (project == null)
+            {
+                return HttpStatusCode.NotFound;
+            }
+
+            // set up the view model
+            RequestUriAggregateViewModel viewModel = new RequestUriAggregateViewModel();
+            viewModel.ProjectId = projectId;
+            viewModel.ProjectName = project.Name;
+            viewModel.UriStemAggregate = uriStemAggregate;
+
+            AddScript(Scripts.RequestsByAggregateView);
+            return this.View[Views.Project.RequestByAggregate, viewModel];
+        }
+
+        public dynamic RequestsByAggregateDetail(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            string uriStemAggregate = Request.Form["uri"];
+
+            IEnumerable<RequestModel> requests = _requestRepo.GetByUriStemAggregate(projectId, uriStemAggregate);
+            return this.Response.AsJson(requests);
+        }
+
     }
 }

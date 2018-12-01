@@ -18,6 +18,7 @@ namespace IISLogReader.Navigation
         public class Project
         {
             public const string View = "Views/Project/ProjectView.cshtml";
+            public const string RequestByAggregate = "Views/Project/RequestByUriAggregateView.cshtml";
         }
 
         public class User

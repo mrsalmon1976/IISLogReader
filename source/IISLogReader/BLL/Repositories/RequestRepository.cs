@@ -13,6 +13,8 @@ namespace IISLogReader.BLL.Repositories
 
         IEnumerable<RequestModel> GetByLogFile(int logFileId);
 
+        IEnumerable<RequestModel> GetByUriStemAggregate(int projectId, string uriStemAggregate);
+
         IEnumerable<RequestPageLoadTimeModel> GetPageLoadTimes(int projectId);
     }
 
@@ -30,6 +32,16 @@ namespace IISLogReader.BLL.Repositories
         {
             const string sql = "SELECT * FROM Requests WHERE LogFileId = @LogFileId";
             return _dbContext.Query<RequestModel>(sql, new { LogFileId = logFileId });
+        }
+
+        public IEnumerable<RequestModel> GetByUriStemAggregate(int projectId, string uriStemAggregate)
+        {
+            const string sql = @"SELECT * 
+                FROM Requests r 
+                INNER JOIN LogFiles lf ON r.LogFileId = lf.Id
+                WHERE lf.ProjectId = @ProjectId
+                AND r.UriStemAggregate = @UriStemAggregate";
+            return _dbContext.Query<RequestModel>(sql, new { ProjectId = projectId, UriStemAggregate = uriStemAggregate });
         }
 
         public IEnumerable<RequestPageLoadTimeModel> GetPageLoadTimes(int projectId)

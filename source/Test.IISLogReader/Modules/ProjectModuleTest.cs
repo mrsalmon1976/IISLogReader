@@ -344,6 +344,176 @@ namespace Test.IISLogReader.Modules
 
         #endregion
 
+        #region RequestsByAggregate
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void RequestsByAggregate_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.RequestsByAggregate(projectId);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _projectRepo.DidNotReceive().GetById(Arg.Any<int>());
+
+        }
+
+        [Test()]
+        public void RequestsByAggregate_ProjectDoesNotExist_Returns404()
+        {
+            int projectId = new Random().Next(1, 1000);
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.RequestsByAggregate(projectId);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            _projectRepo.Received(1).GetById(projectId);
+
+        }
+
+        [Test]
+        public void RequestsByAggregate_ValidProjectId_LoadsProjectAndPopulatesModel()
+        {
+            int projectId = new Random().Next(1, 1000);
+            string uri = "/" + Path.GetRandomFileName();
+
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                        context.ViewBag.CurrentUserName = currentUser.UserName;
+                        context.ViewBag.Scripts = new List<string>();
+                        context.ViewBag.Claims = new List<string>();
+                        context.ViewBag.Projects = new List<ProjectModel>();
+                    })
+                );
+
+            ProjectModel project = DataHelper.CreateProjectModel();
+            project.Id = projectId;
+            _projectRepo.GetById(projectId).Returns(project);
+
+            // execute
+            var url = Actions.Project.RequestsByAggregate(projectId);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                with.Query("uri", uri);
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _projectRepo.Received(1).GetById(projectId);
+
+            response.Body["#projectId"].ShouldExistOnce();
+            response.Body["#projectId"].ShouldContainAttribute("value", projectId.ToString());
+
+            response.Body["#uri"].ShouldExistOnce();
+            response.Body["#uri"].ShouldContainAttribute("value", uri);
+
+        }
+
+        #endregion
+
+        #region RequestByAggregateDetail
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void RequestByAggregateDetail_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.RequestsByAggregateDetail(projectId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _projectRepo.DidNotReceive().GetById(Arg.Any<int>());
+
+        }
+
+        [Test]
+        public void RequestByAggregateDetail_ValidProjectId_GetsDetailFromDatabase()
+        {
+            int projectId = new Random().Next(1, 1000);
+            string uri = "/" + Guid.NewGuid().ToString();
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+            RequestModel req1 = DataHelper.CreateRequestModel();
+            RequestModel req2 = DataHelper.CreateRequestModel();
+            RequestModel req3 = DataHelper.CreateRequestModel();
+
+            _requestRepo.GetByUriStemAggregate(projectId, uri).Returns(new RequestModel[] { req1, req2, req3 });
+
+            // execute
+            var url = Actions.Project.RequestsByAggregateDetail(projectId);
+            var response = browser.Post(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+                with.FormValue("uri", uri);
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetByUriStemAggregate(projectId, uri);
+
+            IEnumerable<RequestModel> result = JsonConvert.DeserializeObject<IEnumerable<RequestModel>>(response.Body.AsString());
+            Assert.AreEqual(3, result.Count());
+
+        }
+
+        #endregion
+
         #region Save Tests
 
         [Test]

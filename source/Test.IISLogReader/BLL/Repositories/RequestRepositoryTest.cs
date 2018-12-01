@@ -90,6 +90,68 @@ namespace Test.IISLogReader.BLL.Repositories
 
         }
 
+        /// <summary>
+        /// Tests that the GetByUriStemAggregate method gets all requests for a specific project and uri stem aggregate
+        /// </summary>
+        [Test]
+        public void GetByUriStemAggregate_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+            List<W3CEvent> logEvents = null;
+            int logFileId = 0;
+            string uriStemAggregate = Guid.NewGuid().ToString();
+            int expectedCount = new Random().Next(3, 7);
+
+            using (StreamReader logStream = new StreamReader(TestAsset.ReadTextStream(TestAsset.LogFile)))
+            {
+                logEvents = W3CEnumerable.FromStream(logStream).ToList();
+            }
+
+            for (int i = 0; i < expectedCount; i++)
+            {
+                logEvents[i].cs_uri_stem = uriStemAggregate;
+            }
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+
+                IRequestRepository requestRepo = new RequestRepository(dbContext);
+
+                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
+                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
+                ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
+
+                // create the project
+                ProjectModel project = DataHelper.CreateProjectModel();
+                createProjectCommand.Execute(project);
+
+                ProjectModel project2 = DataHelper.CreateProjectModel();
+                createProjectCommand.Execute(project2);
+
+                // create log file and request records for each
+                LogFileModel logFile = DataHelper.CreateLogFileModel();
+                logFile.ProjectId = project.Id;
+                createLogFileCommand.Execute(logFile);
+                createRequestBatchCommand.Execute(logFile.Id, logEvents);
+
+                LogFileModel logFile2 = DataHelper.CreateLogFileModel();
+                logFile2.ProjectId = project2.Id;
+                createLogFileCommand.Execute(logFile2);
+                createRequestBatchCommand.Execute(logFile2.Id, logEvents);
+
+
+                IEnumerable<RequestModel> result = requestRepo.GetByUriStemAggregate(project.Id, uriStemAggregate);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(expectedCount, result.Count());
+                foreach (RequestModel rm in result)
+                {
+                    Assert.AreEqual(logFile.Id, rm.LogFileId);
+                }
+            }
+
+        }
+
 
         /// <summary>
         /// Tests that the GetPageLoadTimes loads correct averages

@@ -32,6 +32,7 @@ $(document).ready(function () {
                 });
             },
             initaliseAvgLoadTimesGrid: function (projectId) {
+                var that = this;
                 $("#grid-project-load-times").jsGrid({
                     width: "100%",
                     height: "440px",
@@ -55,7 +56,12 @@ $(document).ready(function () {
                     },
                     loadIndicator: Utils.loadIndicator,
                     fields: [
-                        { name: "uriStemAggregate", title: "URI Stem", type: "text" },
+                        {
+                            name: "uriStemAggregate", title: "URI Stem",
+                            itemTemplate: function (value) {
+                                return '<a href="/project/' + that.projectId + '/requests?uri=' + encodeURIComponent(value) + '">' + value + '</a>';
+                            }
+                        },
                         { name: "requestCount", title: "Request Count", type: "number", width: 50 },
                         { name: "avgTimeTakenMilliseconds", title: "Avg Time Taken (ms)", type: "number", width: 50 }
                     ]

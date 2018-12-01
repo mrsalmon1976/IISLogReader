@@ -224,6 +224,7 @@
     <Compile Include="BLL\Security\UserMapper.cs" />
     <Compile Include="Modules\ProjectRequestAggregateModule.cs" />
     <Compile Include="ViewModels\Project\ProjectAggregateViewModel.cs" />
+    <Compile Include="ViewModels\Project\RequestUriAggregateViewModel.cs" />
     <Compile Include="ViewModels\SaveResultModel.cs" />
     <Compile Include="WebConsoleJobActivator.cs" />
     <Compile Include="Modules\DefaultModule.cs" />
@@ -284,6 +285,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\LoginView.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Project\RequestByUriAggregateView.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\Project\ProjectView.cshtml">
@@ -390,7 +394,13 @@
     <Content Include="Content\Js\modernizr.min.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Js\moment.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Js\spin.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Js\Views\RequestsByAggregateView.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Js\Views\ProjectView.js">

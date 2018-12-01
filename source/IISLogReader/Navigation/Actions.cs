@@ -68,7 +68,7 @@ namespace IISLogReader.Navigation
 
             public static string Aggregates(int projectId)
             {
-                return Actions.Project.Aggregates().Replace("{projectId}", projectId.ToString());
+                return Actions.Project.Aggregates(projectId.ToString());
             }
 
             public static string AvgLoadTimes()
@@ -83,7 +83,7 @@ namespace IISLogReader.Navigation
 
             public static string AvgLoadTimes(int projectId)
             {
-                return Actions.Project.AvgLoadTimes().Replace("{projectId}", projectId.ToString());
+                return Actions.Project.AvgLoadTimes(projectId.ToString());
             }
 
             public static string Delete()
@@ -98,7 +98,37 @@ namespace IISLogReader.Navigation
 
             public static string Delete(int projectId)
             {
-                return Actions.Project.Delete().Replace("{projectId}", projectId.ToString());
+                return Actions.Project.Delete(projectId.ToString());
+            }
+
+            public static string RequestsByAggregate()
+            {
+                return "/project/{projectId}/requests";
+            }
+
+            public static string RequestsByAggregate(string projectId)
+            {
+                return Actions.Project.RequestsByAggregate().Replace("{projectId}", projectId);
+            }
+
+            public static string RequestsByAggregate(int projectId)
+            {
+                return Actions.Project.RequestsByAggregate(projectId.ToString());
+            }
+
+            public static string RequestsByAggregateDetail()
+            {
+                return "/project/{projectId}/requests/detail";
+            }
+
+            public static string RequestsByAggregateDetail(string projectId)
+            {
+                return Actions.Project.RequestsByAggregateDetail().Replace("{projectId}", projectId);
+            }
+
+            public static string RequestsByAggregateDetail(int projectId)
+            {
+                return Actions.Project.RequestsByAggregateDetail(projectId.ToString());
             }
 
             public const string Save = "/project/save";
@@ -115,7 +145,7 @@ namespace IISLogReader.Navigation
 
             public static string View(int projectId)
             {
-                return Actions.Project.View().Replace("{projectId}", projectId.ToString());
+                return Actions.Project.View(projectId.ToString());
             }
 
             public static string Files()
@@ -130,7 +160,7 @@ namespace IISLogReader.Navigation
 
             public static string Files(int projectId)
             {
-                return Actions.Project.Files().Replace("{projectId}", projectId.ToString());
+                return Actions.Project.Files(projectId.ToString());
             }
 
         }
