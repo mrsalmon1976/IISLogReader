@@ -57,7 +57,7 @@ namespace Test.IISLogReader.BLL.Services
             Assert.AreEqual(originalUriStem, result);
         }
 
-        [TestCase("/products/batch/A90035AA-C9EC-4A15-AE72-8C4DCD7D755A", "^/products/batch/[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$")]
+        [TestCase("/products/batch/A90035AA-C9EC-4A15-AE72-8C4DCD7D755A", "^/products/batch/[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$")]
         [TestCase("/products/123/test", "^/products/[0-9]+/test$")]
         public void GetAggregatedUriStem_MatchFound_ReturnsAggregateTarget(string originalUriStem, string regEx)
         {
