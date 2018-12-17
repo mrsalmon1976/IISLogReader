@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IISLogReader.BLL.Lookup;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,9 +28,10 @@ namespace IISLogReader.BLL.Models
 
         public DateTime CreateDate { get; set; }
 
-        /// <summary>
-        /// Gets/sets whether the log file has been processed after loading.
-        /// </summary>
-        public bool IsProcessed { get; set; }
+        public LogFileStatus Status { get; set; }
+
+        public string ErrorMsg { get; set; }
+
+
     }
 }

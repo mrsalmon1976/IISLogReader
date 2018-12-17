@@ -27,6 +27,7 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Repositories;
 using System.IO;
 using System.Net.Http;
+using IISLogReader.ViewModels.LogFile;
 
 namespace Test.IISLogReader.Modules
 {
@@ -337,7 +338,7 @@ namespace Test.IISLogReader.Modules
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             _logFileRepo.Received(1).GetByProject(projectId);
 
-            IEnumerable<LogFileModel> result = JsonConvert.DeserializeObject<IEnumerable<LogFileModel>>(response.Body.AsString());
+            IEnumerable<LogFileViewModel> result = JsonConvert.DeserializeObject<IEnumerable<LogFileViewModel>>(response.Body.AsString());
             Assert.AreEqual(3, result.Count());
 
         }

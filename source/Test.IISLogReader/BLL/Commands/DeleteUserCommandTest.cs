@@ -64,6 +64,7 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IUserRepository userRepo = new UserRepository(dbContext);
                 ICreateUserCommand createUserCommand = new CreateUserCommand(dbContext, new UserValidator(userRepo), new PasswordProvider());

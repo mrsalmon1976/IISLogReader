@@ -11,6 +11,7 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Exceptions;
 using System.IO;
+using System.Data;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -80,6 +81,7 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 ProjectModel project = DataHelper.CreateProjectModel();
 

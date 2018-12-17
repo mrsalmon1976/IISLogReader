@@ -160,6 +160,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL\Commands\ProcessLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\DeleteUserCommandTest.cs" />
     <Compile Include="BLL\Commands\UpdateUserPasswordCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateUserCommandTest.cs" />
@@ -170,7 +171,6 @@
     <Compile Include="BLL\Commands\SetLogFileUnprocessedCommandTest.cs" />
     <Compile Include="BLL\Commands\DeleteProjectCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateRequestBatchCommandTest.cs" />
-    <Compile Include="BLL\Commands\CreateLogFileWithRequestsCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateLogFileCommandTest.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommandTest.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContextTest.cs" />

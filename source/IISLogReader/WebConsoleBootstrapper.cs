@@ -95,7 +95,6 @@ namespace IISLogReader
 
             // commands
             container.Register<ICreateLogFileCommand, CreateLogFileCommand>();
-            container.Register<ICreateLogFileWithRequestsCommand, CreateLogFileWithRequestsCommand>();
             container.Register<ICreateProjectCommand, CreateProjectCommand>();
             container.Register<ICreateProjectRequestAggregateCommand, CreateProjectRequestAggregateCommand>();
             container.Register<ICreateRequestBatchCommand, CreateRequestBatchCommand>();
@@ -104,6 +103,7 @@ namespace IISLogReader
             container.Register<IDeleteProjectCommand, DeleteProjectCommand>();
             container.Register<IDeleteProjectRequestAggregateCommand, DeleteProjectRequestAggregateCommand>();
             container.Register<IDeleteUserCommand, DeleteUserCommand>();
+            container.Register<IProcessLogFileCommand, ProcessLogFileCommand>();
             container.Register<ISetLogFileUnprocessedCommand, SetLogFileUnprocessedCommand>();
             container.Register<IUpdateUserPasswordCommand, UpdateUserPasswordCommand>();
 

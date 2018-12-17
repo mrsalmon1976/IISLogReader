@@ -1,4 +1,5 @@
-﻿using IISLogReader.BLL.Models;
+﻿using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using System;
 using System.Collections.Generic;
@@ -72,6 +73,20 @@ namespace Test.IISLogReader
             model.Password = "password";
             model.Role = Roles.User;
             return model;
+        }
+
+        public static void InsertLogFileModel(IDbContext dbContext, LogFileModel logFile)
+        {
+            const string sql = @"INSERT INTO LogFiles (ProjectId, FileName, FileHash, CreateDate, FileLength, RecordCount, Status) VALUES (@ProjectId, @FileName, @FileHash, @CreateDate, @FileLength, @RecordCount, @Status)";
+            dbContext.ExecuteNonQuery(sql, logFile);
+            logFile.Id = dbContext.ExecuteScalar<int>("select last_insert_rowid()");
+        }
+
+        public static void InsertProjectModel(IDbContext dbContext, ProjectModel project)
+        {
+            const string sql = @"INSERT INTO Projects (Name, CreateDate) VALUES (@Name, @CreateDate)";
+            dbContext.ExecuteNonQuery(sql, project);
+            project.Id = dbContext.ExecuteScalar<int>("select last_insert_rowid()");
         }
 
     }

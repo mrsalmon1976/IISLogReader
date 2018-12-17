@@ -68,9 +68,9 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
                 IDeleteLogFileCommand deleteLogFileCommand = new DeleteLogFileCommand(dbContext);
 
@@ -79,13 +79,11 @@ namespace Test.IISLogReader.BLL.Commands
                 ProjectModel project = DataHelper.CreateProjectModel();
 
                 // create 2 the log files
-                LogFileModel logFile1 = DataHelper.CreateLogFileModel();
-                logFile1.ProjectId = project.Id;
-                createLogFileCommand.Execute(logFile1);
+                LogFileModel logFile1 = DataHelper.CreateLogFileModel(project.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile1);
 
-                LogFileModel logFile2 = DataHelper.CreateLogFileModel();
-                logFile2.ProjectId = project.Id;
-                createLogFileCommand.Execute(logFile2);
+                LogFileModel logFile2 = DataHelper.CreateLogFileModel(project.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile2);
 
                 // create the request batch
                 createRequestBatchCommand.Execute(logFile1.Id, logEvents);

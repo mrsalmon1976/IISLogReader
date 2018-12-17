@@ -22,6 +22,7 @@ using IISLogReader.BLL.Repositories;
 using System.IO;
 using Tx.Windows;
 using Newtonsoft.Json;
+using IISLogReader.ViewModels.LogFile;
 
 namespace IISLogReader.Modules
 {
@@ -142,7 +143,9 @@ namespace IISLogReader.Modules
             }
 
             IEnumerable<LogFileModel> logFiles = _logFileRepo.GetByProject(projectId);
-            return this.Response.AsJson<IEnumerable<LogFileModel>>(logFiles);
+            IEnumerable<LogFileViewModel> logFileViewModels = logFiles.Select(x => Mapper.Map<LogFileModel, LogFileViewModel>(x));
+
+            return this.Response.AsJson<IEnumerable<LogFileViewModel>>(logFileViewModels);
         }
 
         public dynamic ProjectSave()

@@ -45,6 +45,7 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IProjectRequestAggregateRepository projectRequestAggregateRepo = new ProjectRequestAggregateRepository(dbContext);
 
@@ -86,18 +87,18 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IProjectRequestAggregateRepository projectRequestAggregateRepo = new ProjectRequestAggregateRepository(dbContext);
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
                 ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = Substitute.For<ISetLogFileUnprocessedCommand>();
                 ICreateProjectRequestAggregateCommand projectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, new ProjectRequestAggregateValidator(), new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
 
                 // create the projects
                 ProjectModel projectA = DataHelper.CreateProjectModel();
-                projectA = createProjectCommand.Execute(projectA);
+                DataHelper.InsertProjectModel(dbContext, projectA);
                 ProjectModel projectZ = DataHelper.CreateProjectModel();
-                projectZ = createProjectCommand.Execute(projectZ);
+                DataHelper.InsertProjectModel(dbContext, projectZ);
 
                 // create the request aggregate records for ProjectA
                 int numRecords = new Random().Next(5, 10);

@@ -11,6 +11,7 @@ using System.IO;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Services;
 
 namespace Test.IISLogReader.BLL.Repositories
 {
@@ -18,6 +19,7 @@ namespace Test.IISLogReader.BLL.Repositories
     public class LogFileRepositoryTest
     {
         private IDbContext _dbContext;
+
 
 
         [SetUp]
@@ -52,16 +54,13 @@ namespace Test.IISLogReader.BLL.Repositories
 
                 // create the project
                 ProjectModel project = DataHelper.CreateProjectModel();
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log file record
                 LogFileModel logFile = DataHelper.CreateLogFileModel();
                 logFile.ProjectId = project.Id;
                 logFile.FileHash = fileHash;
-
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
-                logFile = createLogFileCommand.Execute(logFile);
+                DataHelper.InsertLogFileModel(dbContext, logFile);
 
                 LogFileModel result = logFileRepo.GetByHash(project.Id, fileHash);
                 Assert.IsNotNull(result);
@@ -85,19 +84,19 @@ namespace Test.IISLogReader.BLL.Repositories
             {
                 dbContext.Initialise();
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ILogFileRepository logFileRepo = new LogFileRepository(dbContext);
 
                 // create the project
                 ProjectModel project = DataHelper.CreateProjectModel();
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log file record
                 LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
-                createLogFileCommand.Execute(logFile);
+                DataHelper.InsertLogFileModel(dbContext, logFile);
 
-                LogFileModel result = logFileRepo.GetById(logFile.Id);
+                int logFileId = dbContext.ExecuteScalar<int>("select last_insert_rowid()");
+
+                LogFileModel result = logFileRepo.GetById(logFileId);
                 Assert.IsNotNull(result);
                 Assert.AreEqual(logFile.FileHash, result.FileHash);
             }
@@ -119,14 +118,11 @@ namespace Test.IISLogReader.BLL.Repositories
 
                 ILogFileRepository logFileRepo = new LogFileRepository(dbContext);
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
-
                 // create the projects
                 ProjectModel projectA = DataHelper.CreateProjectModel();
-                projectA = createProjectCommand.Execute(projectA);
+                DataHelper.InsertProjectModel(dbContext, projectA);
                 ProjectModel projectZ = DataHelper.CreateProjectModel();
-                projectZ = createProjectCommand.Execute(projectZ);
+                DataHelper.InsertProjectModel(dbContext, projectZ);
 
                 // create the log file records for ProjectA, as well as some for a different project
                 int numRecords = new Random().Next(5, 10);
@@ -135,7 +131,7 @@ namespace Test.IISLogReader.BLL.Repositories
                     LogFileModel logFile = DataHelper.CreateLogFileModel();
                     logFile.ProjectId = projectA.Id;
                     logFile.FileName = "ProjectA_" + i.ToString();
-                    createLogFileCommand.Execute(logFile);
+                    DataHelper.InsertLogFileModel(dbContext, logFile);
                 }
 
                 // create the log file records for ProjectB that should be excluded by the query
@@ -144,7 +140,7 @@ namespace Test.IISLogReader.BLL.Repositories
                     LogFileModel logFile = DataHelper.CreateLogFileModel();
                     logFile.ProjectId = projectZ.Id;
                     logFile.FileName = "ProjectZ_" + i.ToString();
-                    createLogFileCommand.Execute(logFile);
+                    DataHelper.InsertLogFileModel(dbContext, logFile);
                 }
 
 

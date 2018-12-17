@@ -176,6 +176,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BLL\Commands\ProcessLogFileCommand.cs" />
     <Compile Include="BLL\Commands\CreateUserCommand.cs" />
     <Compile Include="BLL\Commands\DeleteLogFileCommand.cs" />
     <Compile Include="BLL\Commands\DeleteUserCommand.cs" />
@@ -183,7 +184,6 @@
     <Compile Include="BLL\Commands\CreateProjectRequestAggregateCommand.cs" />
     <Compile Include="BLL\Commands\DeleteProjectCommand.cs" />
     <Compile Include="BLL\Commands\CreateRequestBatchCommand.cs" />
-    <Compile Include="BLL\Commands\CreateLogFileWithRequestsCommand.cs" />
     <Compile Include="BLL\Commands\CreateLogFileCommand.cs" />
     <Compile Include="BLL\Commands\CreateProjectCommand.cs" />
     <Compile Include="BLL\Commands\SetLogFileUnprocessedCommand.cs" />
@@ -192,6 +192,8 @@
     <Compile Include="BLL\Data\Db\DbContext.cs" />
     <Compile Include="BLL\Data\Db\DbContextFactory.cs" />
     <Compile Include="BLL\Data\Db\SQLiteDbContext.cs" />
+    <Compile Include="BLL\Lookup\Enums.cs" />
+    <Compile Include="BLL\Models\FileDetail.cs" />
     <Compile Include="BLL\Models\ProjectRequestAggregateModel.cs" />
     <Compile Include="BLL\Models\LogFileModel.cs" />
     <Compile Include="BLL\Models\ProjectModel.cs" />
@@ -209,9 +211,11 @@
     <Compile Include="BLL\Security\PasswordProvider.cs" />
     <Compile Include="BLL\Security\Roles.cs" />
     <Compile Include="BLL\Security\UserIdentity.cs" />
+    <Compile Include="BLL\Services\JobExecutionService.cs" />
     <Compile Include="BLL\Services\JobRegistrationService.cs" />
     <Compile Include="BLL\Services\RequestAggregationService.cs" />
     <Compile Include="BLL\Services\UserService.cs" />
+    <Compile Include="BLL\Utils\FileUtils.cs" />
     <Compile Include="BLL\Utils\NumericUtils.cs" />
     <Compile Include="BLL\Utils\ParsedAssemblyQualifiedName.cs" />
     <Compile Include="BLL\Validators\ProjectRequestAggregateValidator.cs" />
@@ -223,6 +227,7 @@
     <Compile Include="Configuration\AppSettings.cs" />
     <Compile Include="BLL\Security\UserMapper.cs" />
     <Compile Include="Modules\ProjectRequestAggregateModule.cs" />
+    <Compile Include="ViewModels\LogFile\LogFileViewModel.cs" />
     <Compile Include="ViewModels\Project\ProjectAggregateViewModel.cs" />
     <Compile Include="ViewModels\Project\RequestUriAggregateViewModel.cs" />
     <Compile Include="ViewModels\SaveResultModel.cs" />

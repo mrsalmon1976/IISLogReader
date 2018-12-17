@@ -86,6 +86,7 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 // create the user
                 UserModel user = DataHelper.CreateUserModel();

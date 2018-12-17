@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS LogFiles (
 	CreateDate text NOT NULL,
 	FileLength INTEGER NOT NULL,
 	RecordCount INTEGER NOT NULL,
-	IsProcessed INTEGER NOT NULL,
+	Status INTEGER NOT NULL,
+	ErrorMsg text NULL,
 	FOREIGN KEY(ProjectId) REFERENCES Project(Id)
 );
 

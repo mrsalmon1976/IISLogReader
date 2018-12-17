@@ -56,23 +56,21 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IRequestRepository requestRepo = new RequestRepository(dbContext);
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
 
                 // create the project
                 ProjectModel project = DataHelper.CreateProjectModel();
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create multiple log file records 
                 for (var i = 0; i < 3; i++)
                 {
-                    LogFileModel logFile = DataHelper.CreateLogFileModel();
-                    logFile.ProjectId = project.Id;
-                    createLogFileCommand.Execute(logFile);
+                    LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                    DataHelper.InsertLogFileModel(dbContext, logFile);
 
                     createRequestBatchCommand.Execute(logFile.Id, logEvents);
 
@@ -98,7 +96,6 @@ namespace Test.IISLogReader.BLL.Repositories
         {
             string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
             List<W3CEvent> logEvents = null;
-            int logFileId = 0;
             string uriStemAggregate = Guid.NewGuid().ToString();
             int expectedCount = new Random().Next(3, 7);
 
@@ -115,29 +112,26 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IRequestRepository requestRepo = new RequestRepository(dbContext);
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
 
                 // create the project
                 ProjectModel project = DataHelper.CreateProjectModel();
-                createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 ProjectModel project2 = DataHelper.CreateProjectModel();
-                createProjectCommand.Execute(project2);
+                DataHelper.InsertProjectModel(dbContext, project2);
 
                 // create log file and request records for each
-                LogFileModel logFile = DataHelper.CreateLogFileModel();
-                logFile.ProjectId = project.Id;
-                createLogFileCommand.Execute(logFile);
+                LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile);
                 createRequestBatchCommand.Execute(logFile.Id, logEvents);
 
-                LogFileModel logFile2 = DataHelper.CreateLogFileModel();
-                logFile2.ProjectId = project2.Id;
-                createLogFileCommand.Execute(logFile2);
+                LogFileModel logFile2 = DataHelper.CreateLogFileModel(project2.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile2);
                 createRequestBatchCommand.Execute(logFile2.Id, logEvents);
 
 
@@ -174,20 +168,18 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
                 IRequestRepository requestRepo = new RequestRepository(dbContext);
 
                 // create the project
                 ProjectModel project = DataHelper.CreateProjectModel();
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log file record
-                LogFileModel logFile = DataHelper.CreateLogFileModel();
-                logFile.ProjectId = project.Id;
-                logFile = createLogFileCommand.Execute(logFile);
+                LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile);
 
                 // create the requests
                 createRequestBatchCommand.Execute(logFile.Id, logEvents);
@@ -222,6 +214,6 @@ namespace Test.IISLogReader.BLL.Repositories
             evt.time_taken = timeTaken.ToString();
             return evt;
         }
-   
+
     }
 }

@@ -49,6 +49,7 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IUserRepository userRepo = new UserRepository(dbContext);
 
@@ -88,6 +89,7 @@ namespace Test.IISLogReader.BLL.Repositories
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IUserRepository userRepo = new UserRepository(dbContext);
 

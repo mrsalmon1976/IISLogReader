@@ -26,6 +26,13 @@ namespace IISLogReader.BLL.Services
         /// </summary>
         /// <param name="logFileId"></param>
         void RegisterAggregateRequestJob(int logFileId);
+
+        /// <summary>
+        /// Job registered once a file has been uploaded, to process the contents of the log file.
+        /// </summary>
+        /// <param name="logFileId"></param>
+        /// <param name="filePath"></param>
+        void RegisterProcessLogFileJob(int logFileId, string filePath);
     }
 
     public class JobRegistrationService : IJobRegistrationService
@@ -38,7 +45,7 @@ namespace IISLogReader.BLL.Services
         /// <param name="logFileId"></param>
         public void RegisterResetProcessedLogFileJob(int logFileId)
         {
-            BackgroundJob.Enqueue<SetLogFileUnprocessedCommand>(x => x.Execute(logFileId));
+            BackgroundJob.Enqueue<JobExecutionService>(x => x.ExecuteResetProcessedLogFileJob(logFileId));
         }
 
         /// <summary>
@@ -48,17 +55,17 @@ namespace IISLogReader.BLL.Services
         /// <param name="logFileId"></param>
         public void RegisterAggregateRequestJob(int logFileId)
         {
-            BackgroundJob.Enqueue<ResetRequestAggregatesCommand>(x => x.Execute(logFileId));
-            //Func<Task> t = delegate {
-            //    using (IDbContext dbContext = _dbContextFactory.GetDbContext())
-            //    {
-            //        var cmd = new ResetRequestAggregatesCommand(dbContext);
-            //        cmd.Execute(logFileId);
-            //        return Task.CompletedTask;
-            //    }
-            //};
-            //BackgroundJob.Enqueue(() => t.Invoke());
+            BackgroundJob.Enqueue<JobExecutionService>(x => x.ExecuteAggregateRequestJob(logFileId));
         }
 
+        /// <summary>
+        /// Job registered once a file has been uploaded, to process the contents of the log file.
+        /// </summary>
+        /// <param name="logFileId"></param>
+        /// <param name="filePath"></param>
+        public void RegisterProcessLogFileJob(int logFileId, string filePath)
+        {
+            BackgroundJob.Enqueue<JobExecutionService>(x => x.ExecuteProcessLogFileJob(logFileId, filePath));
+        }
     }
 }

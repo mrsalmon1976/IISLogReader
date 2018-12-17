@@ -115,17 +115,17 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IProjectRequestAggregateRepository projectRequestAggregateRepo = new ProjectRequestAggregateRepository(dbContext);
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
                 ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = Substitute.For<ISetLogFileUnprocessedCommand>();
                 ICreateProjectRequestAggregateCommand createProjectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, new ProjectRequestAggregateValidator(), new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
                 IDeleteProjectRequestAggregateCommand deleteProjectRequestAggregateCommand = new DeleteProjectRequestAggregateCommand(dbContext, projectRequestAggregateRepo, new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
-                createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the request aggregate
                 ProjectRequestAggregateModel projectRequestAggregate = DataHelper.CreateProjectRequestAggregateModel();

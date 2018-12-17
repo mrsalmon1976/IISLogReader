@@ -21,6 +21,8 @@ using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Repositories;
 using System.IO;
 using Tx.Windows;
+using IISLogReader.Configuration;
+using SystemWrapper.IO;
 
 namespace IISLogReader.Modules
 {
@@ -28,14 +30,23 @@ namespace IISLogReader.Modules
     {
 
         private IDbContext _dbContext;
-        private ICreateLogFileWithRequestsCommand _createLogFileWithRequestsCommand;
+        private ICreateLogFileCommand _createLogFileCommand;
         private IDeleteLogFileCommand _deleteLogFileCommand;
+        private IAppSettings _appSettings;
+        private IDirectoryWrap _dirWrap;
 
-        public LogFileModule(IDbContext dbContext, ICreateLogFileWithRequestsCommand createLogFileWithRequestsCommand, IDeleteLogFileCommand deleteLogFileCommand)
+        public LogFileModule(IDbContext dbContext
+            , IAppSettings appSettings
+            , ICreateLogFileCommand createLogFileCommand
+            , IDeleteLogFileCommand deleteLogFileCommand
+            , IDirectoryWrap dirWrap
+            )
         {
             _dbContext = dbContext;
-            _createLogFileWithRequestsCommand = createLogFileWithRequestsCommand;
+            _appSettings = appSettings;
+            _createLogFileCommand = createLogFileCommand;
             _deleteLogFileCommand = deleteLogFileCommand;
+            _dirWrap = dirWrap;
 
             Post[Actions.LogFile.Delete()] = x =>
             {
@@ -67,12 +78,25 @@ namespace IISLogReader.Modules
         public dynamic Save()
         {
             SaveLogFileViewModel model = this.Bind<SaveLogFileViewModel>();
+
+            // make sure the processing directory exists
+            _dirWrap.CreateDirectory(_appSettings.LogFileProcessingDirectory);
+
             foreach (HttpFile f in Request.Files)
             {
-                _dbContext.BeginTransaction();
+                // save the file to disk
+                string filePath = Path.Combine(_appSettings.LogFileProcessingDirectory, f.Name);
+                using (var fileStream = File.Create(filePath))
+                {
+                    f.Value.Seek(0, SeekOrigin.Begin);
+                    f.Value.CopyTo(fileStream);
+                }
+
+                // create the log file record - this will kick off the job to actually process the file
                 try
                 {
-                    _createLogFileWithRequestsCommand.Execute(model.ProjectId, f.Name, f.Value);
+                    _dbContext.BeginTransaction();
+                    _createLogFileCommand.Execute(model.ProjectId, filePath);
                     _dbContext.Commit();
                 }
                 catch (Exception ex)
@@ -80,7 +104,6 @@ namespace IISLogReader.Modules
                     _dbContext.Rollback();
                     return this.Response.AsJson<string>(ex.Message, HttpStatusCode.BadRequest);
                 }
-
             }
             return HttpStatusCode.OK;
         }

@@ -1,4 +1,5 @@
 ﻿using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Lookup;
 using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Services;
@@ -61,9 +62,9 @@ namespace IISLogReader.BLL.Commands
             }
 
             // mark the log file as processed
-            string sql = "UPDATE LogFiles SET IsProcessed = 1 WHERE Id = @LogFileId";
-            _dbContext.ExecuteNonQuery(sql, new { LogFileId = logFileId });
-            _logger.Info("Marked LogFile {0} as Processed", logFileId);
+            string sql = "UPDATE LogFiles SET Status = @Status WHERE Id = @LogFileId";
+            _dbContext.ExecuteNonQuery(sql, new { LogFileId = logFileId, Status = LogFileStatus.Complete });
+            _logger.Info("Marked LogFile {0} as Complete", logFileId);
         }
     }
 }

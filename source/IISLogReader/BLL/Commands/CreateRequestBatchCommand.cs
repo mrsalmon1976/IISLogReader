@@ -30,7 +30,11 @@ namespace IISLogReader.BLL.Commands
 
         public void Execute(int logFileId, IEnumerable<W3CEvent> logEvents)
         {
-            string sql = @"INSERT INTO Requests (
+            // delete all requests for this log file - in case we had an error in the job before and it only got half way
+            string dsql = "DELETE FROM Requests WHERE LogFileId = @LogFileId";
+            _dbContext.ExecuteNonQuery(dsql, new { LogFileId = logFileId });
+
+            string isql = @"INSERT INTO Requests (
                 LogFileId
                 , RequestDateTime
                 , ClientIp 
@@ -108,7 +112,7 @@ namespace IISLogReader.BLL.Commands
                 }
 
                 // insert new record
-                _dbContext.ExecuteNonQuery(sql, model);
+                _dbContext.ExecuteNonQuery(isql, model);
 
 
             }

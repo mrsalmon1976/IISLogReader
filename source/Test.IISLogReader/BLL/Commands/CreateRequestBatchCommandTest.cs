@@ -14,6 +14,7 @@ using System.IO;
 using Tx.Windows;
 using Test.IISLogReader.TestAssets;
 using IISLogReader.BLL.Services;
+using System.Data;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -42,25 +43,6 @@ namespace Test.IISLogReader.BLL.Commands
 
         }
 
-        [Test]
-        public void Execute_ValidationFails_ThrowsException()
-        {
-            _requestValidator.Validate(Arg.Any<RequestModel>()).Returns(new ValidationResult("error"));
-
-            using (StreamReader logStream = new StreamReader(TestAsset.ReadTextStream(TestAsset.LogFile)))
-            {
-                var logEvents = W3CEnumerable.FromStream(logStream).ToList();
-
-                // execute
-                TestDelegate del = () => _createRequestBatchCommand.Execute(0, logEvents);
-
-                // assert
-                Assert.Throws<ValidationException>(del);
-
-                // we shouldn't have even tried to do the insert
-                _dbContext.DidNotReceive().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
-            }
-        }
 
         [Test]
         public void Execute_ValidationSucceeds_BatchInserted()
@@ -79,7 +61,9 @@ namespace Test.IISLogReader.BLL.Commands
 
                 // assert
                 _requestValidator.Received(eventCount).Validate(Arg.Any<RequestModel>());
-                _dbContext.Received(eventCount).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+
+                // should receive eventCount + 1 -> delete also done
+                _dbContext.Received(eventCount + 1).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
             }
         }
 
@@ -100,22 +84,19 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
-                IProjectValidator projectValidator = new ProjectValidator();
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, projectValidator);
-                ProjectModel savedProject = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log file
-                LogFileModel logFile = DataHelper.CreateLogFileModel();
-                logFile.ProjectId = savedProject.Id;
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
-                LogFileModel savedLogFile = createLogFileCommand.Execute(logFile);
+                LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                DataHelper.InsertLogFileModel(dbContext, logFile);
 
                 // create the request batch
                 ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
-                createRequestBatchCommand.Execute(savedLogFile.Id, logEvents);
+                createRequestBatchCommand.Execute(logFile.Id, logEvents);
 
                 int rowCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM Requests");
                 Assert.AreEqual(logEvents.Count, rowCount);

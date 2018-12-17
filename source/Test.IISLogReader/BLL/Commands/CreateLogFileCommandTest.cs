@@ -11,6 +11,11 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Exceptions;
 using System.IO;
+using IISLogReader.BLL.Repositories;
+using IISLogReader.BLL.Services;
+using IISLogReader.BLL.Utils;
+using IISLogReader.BLL.Lookup;
+using System.Data;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -21,14 +26,20 @@ namespace Test.IISLogReader.BLL.Commands
 
         private IDbContext _dbContext;
         private ILogFileValidator _logFileValidator;
+        private ILogFileRepository _logFileRepo;
+        private IJobRegistrationService _jobRegistrationService;
+        private IFileUtils _fileUtils;
 
         [SetUp]
         public void CreateLogFileCommandTest_SetUp()
         {
             _dbContext = Substitute.For<IDbContext>();
             _logFileValidator = Substitute.For<ILogFileValidator>();
+            _logFileRepo = Substitute.For<ILogFileRepository>();
+            _jobRegistrationService = Substitute.For<IJobRegistrationService>();
+            _fileUtils = Substitute.For<IFileUtils>();
 
-            _createLogFileCommand = new CreateLogFileCommand(_dbContext, _logFileValidator);
+            _createLogFileCommand = new CreateLogFileCommand(_dbContext, _logFileValidator, _logFileRepo, _jobRegistrationService, _fileUtils);
         }
 
         [TearDown]
@@ -40,34 +51,88 @@ namespace Test.IISLogReader.BLL.Commands
         }
 
         [Test]
-        public void Execute_ValidationFails_ThrowsException()
+        public void Execute_FileWithHashAlreadyExists_ThrowsException()
         {
-            LogFileModel model = DataHelper.CreateLogFileModel();
+            int projectId = new Random().Next(1, 1000);
+            string filePath = Path.Combine(AppContext.BaseDirectory, "test.log");
+            FileDetail fileDetail = new FileDetail();
+            fileDetail.Hash = Guid.NewGuid().ToString();
 
-            _logFileValidator.Validate(model).Returns(new ValidationResult("error"));
+            _fileUtils.GetFileHash(filePath).Returns(fileDetail);
+
+            LogFileModel model = DataHelper.CreateLogFileModel();
+            _logFileRepo.GetByHash(projectId, fileDetail.Hash).Returns(model);
 
             // execute
-            TestDelegate del = () => _createLogFileCommand.Execute(model);
-            
+            TestDelegate del = () => _createLogFileCommand.Execute(projectId, filePath);
+
             // assert
             Assert.Throws<ValidationException>(del);
 
-            // we shouldn't have even tried to do the insert
+            _fileUtils.Received(1).GetFileHash(filePath);
+            _logFileRepo.Received(1).GetByHash(projectId, fileDetail.Hash);
+
+            // we shouldn't have even tried to validate or do the insert
+            _logFileValidator.DidNotReceive().Validate(Arg.Any<LogFileModel>());
             _dbContext.DidNotReceive().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
         }
 
         [Test]
-        public void Execute_ValidationSucceeds_RecordInserted()
+        public void Execute_ValidationFails_ThrowsException()
         {
-            LogFileModel model = DataHelper.CreateLogFileModel();
+            int projectId = new Random().Next(1, 1000);
+            string filePath = Path.Combine(AppContext.BaseDirectory, "test.log");
+            FileDetail fileDetail = new FileDetail();
+            fileDetail.Hash = Guid.NewGuid().ToString();
 
-            _logFileValidator.Validate(model).Returns(new ValidationResult());
+            _fileUtils.GetFileHash(filePath).Returns(fileDetail);
+
+            _logFileValidator.Validate(Arg.Any<LogFileModel>()).Returns(new ValidationResult("error"));
 
             // execute
-            _createLogFileCommand.Execute(model);
+            TestDelegate del = () => _createLogFileCommand.Execute(projectId, filePath);
+
+            // assert
+            Assert.Throws<ValidationException>(del);
+
+            _fileUtils.Received(1).GetFileHash(filePath);
+            _logFileRepo.Received(1).GetByHash(projectId, fileDetail.Hash);
+            _logFileValidator.Received(1).Validate(Arg.Any<LogFileModel>());
+
+            // we shouldn't have tried to do the insert
+            _dbContext.DidNotReceive().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+        }
+
+
+        [Test]
+        public void Execute_ValidationSucceeds_RecordInsertedAndJobRegistered()
+        {
+            int projectId = new Random().Next(1, 1000);
+            string filePath = Path.Combine(AppContext.BaseDirectory, "test.log");
+            FileDetail fileDetail = new FileDetail();
+            fileDetail.Length = new Random().Next(1000, 10000);
+            fileDetail.Hash = Guid.NewGuid().ToString();
+            fileDetail.Name = Guid.NewGuid().ToString();
+
+            _fileUtils.GetFileHash(filePath).Returns(fileDetail);
+
+            _logFileValidator.Validate(Arg.Any<LogFileModel>()).Returns(new ValidationResult());
+
+            // execute
+            LogFileModel result = _createLogFileCommand.Execute(projectId, filePath);
 
             // assert
             _dbContext.Received(1).ExecuteNonQuery(Arg.Any<string>(), Arg.Any<object>());
+            _dbContext.Received(1).ExecuteScalar<int>(Arg.Any<string>());
+            _jobRegistrationService.Received(1).RegisterProcessLogFileJob(result.Id, filePath);
+
+            Assert.AreEqual(projectId, result.ProjectId);
+            Assert.AreEqual(fileDetail.Hash, result.FileHash);
+            Assert.AreEqual(fileDetail.Length, result.FileLength);
+            Assert.AreEqual(fileDetail.Name, result.FileName);
+            Assert.AreEqual(-1, result.RecordCount);
+            Assert.AreEqual(LogFileStatus.Processing, result.Status);
+
         }
 
         /// <summary>
@@ -76,23 +141,33 @@ namespace Test.IISLogReader.BLL.Commands
         [Test]
         public void Execute_IntegrationTest_SQLite()
         {
-            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
-            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            string dbPath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(dbPath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
                 IProjectValidator projectValidator = new ProjectValidator();
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, projectValidator);
-                ProjectModel savedProject = createProjectCommand.Execute(project);
+                ILogFileRepository logFileRepo = new LogFileRepository(dbContext);
+
+                int projectId = new Random().Next(1, 1000);
+                string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".log");
+                FileDetail fileDetail = new FileDetail();
+                fileDetail.Length = new Random().Next(1000, 10000);
+                fileDetail.Hash = Guid.NewGuid().ToString();
+                fileDetail.Name = Guid.NewGuid().ToString();
+                _fileUtils.GetFileHash(filePath).Returns(fileDetail);
+
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log file
                 LogFileModel logFile = DataHelper.CreateLogFileModel();
-                logFile.ProjectId = savedProject.Id;
+                logFile.ProjectId = project.Id;
                 ILogFileValidator logFileValidator = new LogFileValidator();
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, logFileValidator);
-                LogFileModel savedLogFile = createLogFileCommand.Execute(logFile);
+                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, logFileValidator, logFileRepo, _jobRegistrationService, _fileUtils);
+                LogFileModel savedLogFile = createLogFileCommand.Execute(project.Id, filePath);
 
                 Assert.Greater(savedLogFile.Id, 0);
 
@@ -101,7 +176,7 @@ namespace Test.IISLogReader.BLL.Commands
 
                 string fileName = dbContext.ExecuteScalar<string>("SELECT FileName FROM LogFiles WHERE Id = @Id", savedLogFile);
                 Assert.AreEqual(savedLogFile.FileName, fileName);
-                Assert.IsFalse(savedLogFile.IsProcessed);
+                Assert.AreEqual(LogFileStatus.Processing, savedLogFile.Status);
 
             }
 

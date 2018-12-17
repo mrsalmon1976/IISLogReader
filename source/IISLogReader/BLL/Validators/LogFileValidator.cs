@@ -37,10 +37,6 @@ namespace IISLogReader.BLL.Validators
             {
                 result.Messages.Add("File length must be a valid number");
             }
-            if (model.RecordCount <= 0)
-            {
-                result.Messages.Add("Record count must be a valid number");
-            }
 
             return result;
         }

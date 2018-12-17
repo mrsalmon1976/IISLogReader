@@ -1,4 +1,5 @@
 ﻿using IISLogReader.BLL.Data;
+using IISLogReader.BLL.Lookup;
 using IISLogReader.BLL.Models;
 using System;
 using System.Collections.Generic;
@@ -52,8 +53,8 @@ namespace IISLogReader.BLL.Repositories
             const string sql = @"SELECT COUNT(lf.Id) 
                 FROM LogFiles lf 
                 WHERE lf.ProjectId = @ProjectId
-                AND IsProcessed = 0";
-            return _dbContext.ExecuteScalar<int>(sql, new { ProjectId = projectId });
+                AND Status = @Status";
+            return _dbContext.ExecuteScalar<int>(sql, new { ProjectId = projectId, Status = LogFileStatus.Processing });
         }
 
     }

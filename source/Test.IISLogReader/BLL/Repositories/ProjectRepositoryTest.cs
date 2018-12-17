@@ -11,6 +11,7 @@ using System.IO;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
+using IISLogReader.BLL.Lookup;
 
 namespace Test.IISLogReader.BLL.Repositories
 {
@@ -57,10 +58,9 @@ namespace Test.IISLogReader.BLL.Repositories
                 ProjectModel projectC = DataHelper.CreateProjectModel();
                 projectC.Name = "CCC";
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                createProjectCommand.Execute(projectA);
-                createProjectCommand.Execute(projectC);
-                createProjectCommand.Execute(projectB);
+                DataHelper.InsertProjectModel(dbContext, projectA);
+                DataHelper.InsertProjectModel(dbContext, projectC);
+                DataHelper.InsertProjectModel(dbContext, projectB);
 
                 List<ProjectModel> projects = projectRepo.GetAll().ToList();
 
@@ -88,8 +88,7 @@ namespace Test.IISLogReader.BLL.Repositories
 
                 ProjectModel project = DataHelper.CreateProjectModel();
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 ProjectModel result = projectRepo.GetById(project.Id);
                 Assert.IsNotNull(result);
@@ -104,10 +103,8 @@ namespace Test.IISLogReader.BLL.Repositories
         /// <summary>
         /// Tests that the GetUnprocessedLogFileCount returns the correct count
         /// </summary>
-        [TestCase(0)]
-        [TestCase(3)]
-        [TestCase(12)]
-        public void GetUnprocessedLogFileCount_Integration_ReturnsValidCount(int unprocessedCount)
+        [Test]
+        public void GetUnprocessedLogFileCount_Integration_ReturnsValidCount()
         {
             string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
             int processedCount = new Random().Next(0, 5);
@@ -117,29 +114,38 @@ namespace Test.IISLogReader.BLL.Repositories
                 dbContext.Initialise();
 
                 IProjectRepository projectRepo = new ProjectRepository(dbContext);
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
 
                 ProjectModel project = DataHelper.CreateProjectModel();
-                project = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
-                // create processed records
-                for (int i=0; i<processedCount; i++)
-                {
-                    LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
-                    logFile.IsProcessed = true;
-                    createLogFileCommand.Execute(logFile);
-                }
+                ProjectModel project2 = DataHelper.CreateProjectModel();
+                DataHelper.InsertProjectModel(dbContext, project2);
 
-                // create unprocessed records
-                for (int i = 0; i < unprocessedCount; i++)
-                {
-                    LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
-                    createLogFileCommand.Execute(logFile);
-                }
+                // create records
+                const string sql = @"INSERT INTO LogFiles (ProjectId, FileName, FileHash, CreateDate, FileLength, RecordCount, Status) VALUES (@ProjectId, @FileName, @FileHash, @CreateDate, @FileLength, @RecordCount, @Status)";
+
+                // create two processing record - this should be included
+                LogFileModel logFile = DataHelper.CreateLogFileModel(project.Id);
+                logFile.Status = LogFileStatus.Processing;
+                dbContext.ExecuteNonQuery(sql, logFile);
+
+                // create a processing record - this should be included
+                logFile = DataHelper.CreateLogFileModel(project.Id);
+                logFile.Status = LogFileStatus.Processing;
+                dbContext.ExecuteNonQuery(sql, logFile);
+
+                // create an error records - this should not be included
+                logFile = DataHelper.CreateLogFileModel(project.Id);
+                logFile.Status = LogFileStatus.Error;
+                dbContext.ExecuteNonQuery(sql, logFile);
+
+                // create a pending record for another project - this should also not be included
+                logFile = DataHelper.CreateLogFileModel(project2.Id);
+                logFile.Status = LogFileStatus.Processing;
+                dbContext.ExecuteNonQuery(sql, logFile);
 
                 int result = projectRepo.GetUnprocessedLogFileCount(project.Id);
-                Assert.AreEqual(unprocessedCount, result);
+                Assert.AreEqual(2, result);
 
             }
 

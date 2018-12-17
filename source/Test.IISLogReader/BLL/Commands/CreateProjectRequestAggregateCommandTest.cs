@@ -13,6 +13,7 @@ using IISLogReader.BLL.Exceptions;
 using System.IO;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Services;
+using System.Data;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -44,6 +45,7 @@ namespace Test.IISLogReader.BLL.Commands
             TestHelper.DeleteTestFiles(AppContext.BaseDirectory, "*.dbtest");
 
         }
+
 
         [Test]
         public void Execute_ValidationFails_ThrowsException()
@@ -112,16 +114,16 @@ namespace Test.IISLogReader.BLL.Commands
             using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
             {
                 dbContext.Initialise();
+                dbContext.BeginTransaction();
 
                 IProjectValidator projectValidator = new ProjectValidator();
                 IProjectRequestAggregateValidator validator = new ProjectRequestAggregateValidator();
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, projectValidator);
                 ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = Substitute.For<ISetLogFileUnprocessedCommand>();
                 ICreateProjectRequestAggregateCommand createProjectRequestAggregateCommand = new CreateProjectRequestAggregateCommand(dbContext, validator, new LogFileRepository(dbContext), setLogFileUnprocessedCommand);
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
-                createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the request aggregate
                 ProjectRequestAggregateModel projectRequestAggregate = DataHelper.CreateProjectRequestAggregateModel();

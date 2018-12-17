@@ -81,22 +81,6 @@ namespace Test.IISLogReader.BLL.Validators
             Assert.IsTrue(result.Messages[0].Contains("File length"));
         }
 
-        [TestCase(-1000)]
-        [TestCase(-1)]
-        [TestCase(0)]
-        public void Validate_InvalidRecordCount_ReturnsFailure(int recourdCount)
-        {
-            LogFileModel model = DataHelper.CreateLogFileModel();
-            model.RecordCount = recourdCount;
-
-            ValidationResult result = _logFileValidator.Validate(model);
-
-            Assert.IsFalse(result.Success);
-            Assert.AreEqual(1, result.Messages.Count);
-            Assert.IsTrue(result.Messages[0].Contains("Record count"));
-        }
-
-
         [Test]
         public void Validate_AllFieldsValid_ReturnsSuccess()
         {

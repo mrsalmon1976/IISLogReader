@@ -118,7 +118,8 @@ $(document).ready(function () {
                         { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "fileName", title: "File Name", type: "text", width: 150, validate: "required" },
                         { name: "fileLength", title: "Size", type: "number", width: 50 },
-                        { name: "recordCount", title: "Records", type: "number", width: 200 },
+                        { name: "statusName", title: "Status", type: "text", width: 150 },
+                        { name: "recordCount", title: "Records", type: "number", width: 50 },
                         { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25, visible: this.isProjectEditor }
                     ],
                     onItemDeleting: function (args) {

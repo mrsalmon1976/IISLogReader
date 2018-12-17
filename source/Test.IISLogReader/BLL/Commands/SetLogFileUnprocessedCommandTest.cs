@@ -14,6 +14,8 @@ using System.IO;
 using IISLogReader.BLL.Services;
 using Tx.Windows;
 using Test.IISLogReader.TestAssets;
+using IISLogReader.BLL.Lookup;
+using IISLogReader.BLL.Repositories;
 
 namespace Test.IISLogReader.BLL.Commands
 {
@@ -76,39 +78,30 @@ namespace Test.IISLogReader.BLL.Commands
             {
                 dbContext.Initialise();
 
-                ICreateProjectCommand createProjectCommand = new CreateProjectCommand(dbContext, new ProjectValidator());
-                ICreateLogFileCommand createLogFileCommand = new CreateLogFileCommand(dbContext, new LogFileValidator());
-                ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
                 ISetLogFileUnprocessedCommand setLogFileUnprocessedCommand = new SetLogFileUnprocessedCommand(dbContext, _jobRegistrationService);
 
                 // create the project first so we have one
                 ProjectModel project = DataHelper.CreateProjectModel();
-                ProjectModel savedProject = createProjectCommand.Execute(project);
+                DataHelper.InsertProjectModel(dbContext, project);
 
                 // create the log files
-                LogFileModel logFile1 = DataHelper.CreateLogFileModel();
-                logFile1.ProjectId = savedProject.Id;
-                logFile1.IsProcessed = true;
-                createLogFileCommand.Execute(logFile1);
+                LogFileModel logFile1 = DataHelper.CreateLogFileModel(project.Id);
+                logFile1.Status = LogFileStatus.Complete;
+                DataHelper.InsertLogFileModel(dbContext, logFile1);
 
-                LogFileModel logFile2 = DataHelper.CreateLogFileModel();
-                logFile2.ProjectId = savedProject.Id;
-                logFile2.IsProcessed = true;
-                createLogFileCommand.Execute(logFile2);
+                LogFileModel logFile2 = DataHelper.CreateLogFileModel(project.Id);
+                logFile2.Status = LogFileStatus.Complete;
+                DataHelper.InsertLogFileModel(dbContext, logFile2);
 
-
-                // create the request batch
-                createRequestBatchCommand.Execute(logFile1.Id, logEvents1);
-                createRequestBatchCommand.Execute(logFile2.Id, logEvents2);
 
                 // check that the log file is processed
-                int processedCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM LogFiles WHERE ProjectId = @ProjectId AND IsProcessed = 1", new { ProjectId = savedProject.Id });
+                int processedCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM LogFiles WHERE ProjectId = @ProjectId AND Status = @Status", new { ProjectId = project.Id, Status = LogFileStatus.Complete });
                 Assert.AreEqual(2, processedCount);
 
                 // execute for a single log file
                 setLogFileUnprocessedCommand.Execute(logFile1.Id);
 
-                processedCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM LogFiles WHERE ProjectId = @ProjectId AND IsProcessed = 1", new { ProjectId = savedProject.Id });
+                processedCount = dbContext.ExecuteScalar<int>("SELECT COUNT(*) FROM LogFiles WHERE ProjectId = @ProjectId AND Status = @Status", new { ProjectId = project.Id, Status = LogFileStatus.Processing });
                 Assert.AreEqual(1, processedCount);
 
 
