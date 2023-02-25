@@ -4,8 +4,26 @@
 .dz-error-mark {
     background-color: #ff6961;
 }
+.label-msg {
+    padding: 4px 10px 4px 10px;
+    color: white;
+    border-radius: 3px;
+}
 .menu-toggle {
     padding-top: 8px;
+}
+.nav > li > .version {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: white;
+}
+.navbar-text {
+    background: transparent;
+    float: left;
+    margin: 10px 8px;
+    padding: 0px;
+    border-radius: 4px;
 }
 .page-header-buttons button {
     margin: 0px 0px 20px 10px;

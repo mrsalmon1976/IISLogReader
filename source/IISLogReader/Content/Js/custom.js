@@ -112,7 +112,82 @@ Utils.showError = function (selector, error) {
     $(selector).removeClass('hidden');
 };
 
+var MainView = function () {
+
+    var that = this;
+    var txtPassword = null;
+    var txtConfirmPassword = null;
+    var msg = null;
+
+    this.init = function () {
+        //this.loadUsers();
+        $('#btn-profile').on('click', function () { that.showUserProfileForm(''); });
+        $('#btn-submit-user-profile').on('click', function () { that.submitChangePassword(''); });
+        this.txtPassword = $('#user-profile-password');
+        this.txtConfirmPassword = $('#user-profile-confirm-password');
+        this.msg = $('#msg-user-profile');
+    //    $('#btn-submit-user').on('click', that.submitForm);
+    //    $('#dlg-user').on('shown.bs.modal', function () {
+    //        $('#txt-user').focus();
+    //    });
+    };
+
+    this.setProfileMessage = function (errorMsg, success) {
+        if (success) {
+            this.msg.removeClass('label-danger').addClass('label-success');
+        }
+        else {
+            this.msg.removeClass('label-success').addClass('label-danger');
+        }
+        this.msg.text(errorMsg);
+        this.msg.show();
+    };
+
+    this.showUserProfileForm = function() {
+        //$("#msg-error").addClass('hidden');
+        $('#dlg-user-profile').modal('show');
+        this.txtPassword.val('');
+        this.txtConfirmPassword.val('');
+        this.msg.hide();
+    };
+
+    this.submitChangePassword = function () {
+
+        if (this.txtPassword.val().length < 5) {
+            this.setProfileMessage('Password must be at least 5 characters', false);
+            return;
+        }
+        if (this.txtPassword.val() != this.txtConfirmPassword.val()) {
+            this.setProfileMessage('Password and confirmation must match', false);
+            return;
+        }
+
+        var formData = $('#form-user-profile').serializeForm();
+        var request = $.ajax({
+            url: "/user/changepassword",
+            method: "POST",
+            data: formData,
+            dataType: 'json',
+            traditional: true
+        });
+
+        request.done(function (response) {
+            if (response.success === false) {
+                that.setProfileMessage(response.messages[0], false);
+            }
+            else {
+                that.setProfileMessage('Password changed!', true);
+                that.txtPassword.val('');
+                that.txtConfirmPassword.val('');
+            }
+        });
+
+    };
+
+}
 
 $(document).ready(function () {
+    var mv = new MainView();
+    mv.init();
 });
 

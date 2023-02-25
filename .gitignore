@@ -278,3 +278,4 @@ __pycache__/
 
 /source/Connections.config
 /deployment/Output
+deployment/*.zip

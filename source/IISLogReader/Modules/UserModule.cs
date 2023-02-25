@@ -65,13 +65,13 @@ namespace IISLogReader.Modules
         {
             string password = Request.Form["Password"];
             string confirmPassword = Request.Form["ConfirmPassword"];
-            if (password.Length < 6)
+            if (password.Length < 5)
             {
-                return Response.AsJson<BasicResult>(new BasicResult(false, "Passwords must be at least 6 characters in length"));
+                return Response.AsJson<BasicResult>(new BasicResult(false, "Passwords must be at least 5 characters"));
             }
             if (password != confirmPassword)
             {
-                return Response.AsJson<BasicResult>(new BasicResult(false, "Password and confirmation password do not match"));
+                return Response.AsJson<BasicResult>(new BasicResult(false, "Password and confirmation do not match"));
             }
 
             // all ok - update the password
