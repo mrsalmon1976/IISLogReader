@@ -71,6 +71,20 @@ namespace Test.IISLogReader.BLL.Services
             Assert.AreEqual(aggregateModel.AggregateTarget, result);
         }
 
+        [Test]
+        public void GetAggregatedUriStem_IsIgnored_ReturnsNull()
+        {
+            ProjectRequestAggregateModel aggregateModel = DataHelper.CreateProjectRequestAggregateModel();
+            aggregateModel.RegularExpression = "test";
+            aggregateModel.IsIgnored = true;
+
+            ProjectRequestAggregateModel[] requestAggregates = { aggregateModel };
+
+            string result = _requestAggregationService.GetAggregatedUriStem("test", requestAggregates);
+
+            Assert.That(result, Is.Null);
+        }
+
         #endregion
     }
 }

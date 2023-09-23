@@ -51,9 +51,17 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-3 control-label">Ignored</label>
+                        <div class="col-sm-9">
+                            <input v-model="aggregateIsIgnored" type="checkbox" value="">
+                            <br>
+                            <span class="font85">All requests matching this expression will be ignored.</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-3 control-label">Aggregate Target</label>
                         <div class="col-sm-9">
-                            <input v-model="aggregateTarget" id="paAggregateTarget" class="form-control" placeholder="/example/{id}" type="text" value="" v-on:keyup="onAggregateInputKeyUp">
+                            <input v-model="aggregateTarget" id="paAggregateTarget" class="form-control" placeholder="/example/{id}" type="text" value="" v-on:keyup="onAggregateInputKeyUp" :readonly="aggregateIsIgnored" />
                         </div>
                     </div>
                     <hr />
@@ -62,7 +70,7 @@
                         <div class="col-sm-9">
                             <input v-model="aggregateTest" id="paTest" class="form-control" placeholder="/example/12345" type="text" value="" v-on:keyup="onAggregateInputKeyUp">
                             <div id="project-aggregate-test" class="alert bg-primary" role="alert" style="margin-top:10px;">
-                                <em id="project-aggregate-icon" class="fa fa-lg fa-warning">&nbsp;</em> 
+                                <em id="project-aggregate-icon" class="fa fa-lg fa-warning">&nbsp;</em>
                                 {{aggregateTestText}}
                             </div>
                         </div>

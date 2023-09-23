@@ -42,7 +42,7 @@ namespace IISLogReader.BLL.Commands
             }
 
             // insert new record
-            string sql = @"INSERT INTO ProjectRequestAggregates (ProjectId, RegularExpression, AggregateTarget, CreateDate) VALUES (@ProjectId, @RegularExpression, @AggregateTarget, @CreateDate)";
+            string sql = @"INSERT INTO ProjectRequestAggregates (ProjectId, RegularExpression, AggregateTarget, CreateDate, IsIgnored) VALUES (@ProjectId, @RegularExpression, @AggregateTarget, @CreateDate, @IsIgnored)";
             _dbContext.ExecuteNonQuery(sql, projectRequestAggregate);
 
             // update the id

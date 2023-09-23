@@ -25,7 +25,7 @@ namespace IISLogReader.BLL.Validators
             {
                 result.Messages.Add("Project id must be a valid number");
             }
-            if (String.IsNullOrWhiteSpace(model.AggregateTarget))
+            if (!model.IsIgnored && String.IsNullOrWhiteSpace(model.AggregateTarget))
             {
                 result.Messages.Add("Aggregate target cannot be empty");
             }

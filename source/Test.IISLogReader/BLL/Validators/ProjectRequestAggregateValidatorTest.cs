@@ -54,6 +54,21 @@ namespace Test.IISLogReader.BLL.Validators
         [TestCase("")]
         [TestCase(null)]
         [TestCase("   ")]
+        public void Validate_InvalidAggregateTargetButIsIgnored_ReturnsTrue(string aggregateTarget)
+        {
+            ProjectRequestAggregateModel model = DataHelper.CreateProjectRequestAggregateModel();
+            model.AggregateTarget = aggregateTarget;
+            model.IsIgnored = true;
+
+            ValidationResult result = _projectRequestAggregateValidator.Validate(model);
+
+            Assert.IsTrue(result.Success);
+        }
+
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("   ")]
         public void Validate_InvalidRegularExpression_ReturnsFailure(string regularExpression)
         {
             ProjectRequestAggregateModel model = DataHelper.CreateProjectRequestAggregateModel();

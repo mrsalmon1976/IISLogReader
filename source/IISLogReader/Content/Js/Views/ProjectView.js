@@ -7,12 +7,13 @@ $(document).ready(function () {
             projectId: $('#projectId').val(),
             isAvgLoadTimesLoaded: false,
             activeTab: null,
-            reloadSeconds: 15,
+            reloadSeconds: 5,
             unprocessedCount: $('#unprocessedCount').val(),
             countdownTimer: null,
             aggregateRegEx: '',
             aggregateTarget: '',
             aggregateTest: '',
+            aggregateIsIgnored: false,
             aggregateTestTextDefault: 'No regular expression or test URI captured',
             aggregateTestText: this.aggregateTestTextDefault,
             isProjectEditor: $('#isProjectEditor').val()
@@ -142,7 +143,6 @@ $(document).ready(function () {
                 var that = this;
                 $("#grid-settings-aggregates").jsGrid({
                     width: "100%",
-                    height: "200px",
                     sorting: true,
                     paging: false,
                     autoload: false,
@@ -165,7 +165,15 @@ $(document).ready(function () {
                     fields: [
                         { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "regularExpression", title: "Regular Expression", type: "text", width: 150 },
-                        { name: "aggregateTarget", title: "Aggregate URI", type: "text" },
+                        {
+                            name: "aggregateTarget", title: "Aggregate URI", type: "text", cellRenderer: function (value, item)
+                            {
+                                if (item.isIgnored) {
+                                    return '<td class="cell-ignored">IGNORED</td>';
+                                }
+                                return '<td>' + item.aggregateTarget + '</td > ';
+                            }
+                        },
                         { type: "control", editButton: false, clearFilterButton: false, modeSwitchButton: false, width: 25, visible: this.isProjectEditor }
                     ],
                     onItemDeleting: function (args) {
@@ -224,7 +232,12 @@ $(document).ready(function () {
 
                 var re = new RegExp(this.aggregateRegEx);
                 if (re.test(this.aggregateTest)) {
-                    this.aggregateTestText = 'Woo hoo!  "' + this.aggregateTest + '" will be transformed into "' + this.aggregateTarget + '"';
+                    if (this.aggregateIsIgnored) {
+                        this.aggregateTestText = 'Success!  "' + this.aggregateTest + '" will be ignored';
+                    }
+                    else { 
+                        this.aggregateTestText = 'Success!  "' + this.aggregateTest + '" will be transformed into "' + this.aggregateTarget + '"';
+                    }
                     eleText.addClass('bg-success');
                     eleIcon.addClass('fa-thumbs-up');
                 }
@@ -267,7 +280,8 @@ $(document).ready(function () {
                     data: {
                         projectId: this.projectId,
                         regularExpression: that.aggregateRegEx,
-                        aggregateTarget: that.aggregateTarget
+                        aggregateTarget: (that.aggregateIsIgnored ? '' : that.aggregateTarget),
+                        isIgnored: that.aggregateIsIgnored
                     },
                     dataType: 'json',
                     traditional: true
@@ -280,6 +294,7 @@ $(document).ready(function () {
                         that.aggregateRegEx = '';
                         that.aggregateTarget = '';
                         that.aggregateTest = '';
+                        that.aggregateIsIgnored = false;
                     }
                     else {
                         Utils.showError('#project-aggregate-msg-error', response.messages);
@@ -295,7 +310,7 @@ $(document).ready(function () {
                     }
                 });
             },
-// reloads all data on the screen
+            // reloads all data on the screen
             reloadAll: function () {
                 if (this.countdownTimer != null) {
                     clearInterval(this.countdownTimer);

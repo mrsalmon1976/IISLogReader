@@ -22,5 +22,7 @@ namespace IISLogReader.ViewModels.Project
 
         public string RegularExpression { get; set; }
 
+        public bool IsIgnored { get; set; }
+
     }
 }

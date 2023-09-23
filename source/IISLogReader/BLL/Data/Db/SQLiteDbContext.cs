@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dapper;
 
@@ -116,10 +117,28 @@ namespace IISLogReader.BLL.Data
                 SQLiteConnection.CreateFile(_dbPath);
             }
 
-            string sql = this.ReadResource("IISLogReader.BLL.Data.Scripts.SQLite.sql");
-            using (SQLiteCommand cmd = new SQLiteCommand(sql, _conn))
+            string sqlFileContents = this.ReadResource("IISLogReader.BLL.Data.Scripts.SQLite.sql");
+            IEnumerable<string> sqlStatements = Regex.Split(sqlFileContents, "--\\*\\*").Select(x => x.Trim()).Where(x => x.Length > 0);
+            using (SQLiteCommand cmd = new SQLiteCommand(_conn))
             {
-                cmd.ExecuteNonQuery();
+                foreach (string sql in sqlStatements)
+                {
+                    cmd.CommandText = sql;
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (SQLiteException ex)
+                    {
+                        // SQLite doesn't allow for ALTER IF EXISTS, so we just ignore duplicate column names
+                        if (ex.Message.Contains("duplicate column name"))
+                        {
+                            continue;
+                        }
+                        throw;
+                    }
+                }
+            
             }
         }
 

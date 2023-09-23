@@ -128,10 +128,6 @@ namespace IISLogReader
 
             // set shared ViewBag details here
             context.ViewBag.AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
-            if (Debugger.IsAttached)
-            {
-                context.ViewBag.AppVersion = DateTime.Now.ToString("yyyyMMddHHmmssttt");
-            }
             context.ViewBag.Scripts = new List<string>();
             context.ViewBag.Claims = new List<string>();
 

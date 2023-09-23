@@ -1,26 +1,15 @@
 ﻿using Nancy;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Nancy.Authentication.Forms;
 using Nancy.ModelBinding;
 using Nancy.Security;
 using IISLogReader.Navigation;
-using IISLogReader.ViewModels.Login;
-using Nancy.Responses.Negotiation;
 using IISLogReader.ViewModels;
 using IISLogReader.BLL.Models;
 using IISLogReader.BLL.Security;
 using IISLogReader.ViewModels.Project;
-using AutoMapper;
-using IISLogReader.BLL.Validators;
 using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
-using IISLogReader.BLL.Repositories;
-using System.IO;
-using Tx.Windows;
 using IISLogReader.BLL.Exceptions;
 
 namespace IISLogReader.Modules
@@ -71,6 +60,7 @@ namespace IISLogReader.Modules
             model.ProjectId = viewModel.ProjectId;
             model.AggregateTarget = viewModel.AggregateTarget;
             model.RegularExpression = viewModel.RegularExpression;
+            model.IsIgnored = viewModel.IsIgnored;
             SaveResultModel result = null;
             _dbContext.BeginTransaction();
             try

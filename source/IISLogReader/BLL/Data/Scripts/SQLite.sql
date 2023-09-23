@@ -1,4 +1,5 @@
-﻿CREATE TABLE IF NOT EXISTS Projects (
+﻿--**-- v0.1.0 tables
+CREATE TABLE IF NOT EXISTS Projects (
 	Id INTEGER PRIMARY KEY,
 	Name text NOT NULL,
 	CreateDate text NOT NULL
@@ -58,3 +59,6 @@ CREATE TABLE IF NOT EXISTS Users (
 	Password text NOT NULL,
 	Role text NULL
 );
+
+--**-- v0.2.0 modifications
+ALTER TABLE ProjectRequestAggregates ADD COLUMN IsIgnored INTEGER DEFAULT 0;

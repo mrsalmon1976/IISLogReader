@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Nancy;
 using Nancy.Hosting.Self;
-using System.Net.Sockets;
 using NLog;
 using IISLogReader.Configuration;
 using Hangfire;

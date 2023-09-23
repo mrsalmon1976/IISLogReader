@@ -53,6 +53,7 @@ namespace IISLogReader.BLL.Commands
                 foreach (var req in requests)
                 {
                     const string usql = "UPDATE Requests SET UriStemAggregate = @UriStemAggregate WHERE Id = @RequestId";
+
                     string uriStemAggregate = _requestAggregationService.GetAggregatedUriStem(req.UriStem, requestAggregates);
                     if (uriStemAggregate != req.UriStemAggregate)
                     {

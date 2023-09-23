@@ -26,6 +26,11 @@ namespace IISLogReader.BLL.Services
             {
                 if (Regex.IsMatch(originalUriStem, agg.RegularExpression))
                 {
+                    if (agg.IsIgnored)
+                    {
+                        return null;
+                    }
+
                     return agg.AggregateTarget;
                 }
             }

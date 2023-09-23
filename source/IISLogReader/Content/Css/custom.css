@@ -1,8 +1,14 @@
 .btn-custom-padded {
     padding: 10px 15px 10px 15px;
 }
+.cell-ignored {
+    color:red;
+}
 .dz-error-mark {
     background-color: #ff6961;
+}
+.font85 {
+    font-size: 85%;
 }
 .label-msg {
     padding: 4px 10px 4px 10px;

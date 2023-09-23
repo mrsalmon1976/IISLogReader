@@ -23,5 +23,7 @@ namespace IISLogReader.BLL.Models
 
         public DateTime CreateDate { get; set; }
 
+        public bool IsIgnored {  get; set; }
+
     }
 }
