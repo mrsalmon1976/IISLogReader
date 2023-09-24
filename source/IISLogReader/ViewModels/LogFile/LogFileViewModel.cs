@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ByteSizeLib;
 
 namespace IISLogReader.ViewModels.LogFile
 {
@@ -13,6 +14,14 @@ namespace IISLogReader.ViewModels.LogFile
         public string FileName { get; set; }
 
         public long FileLength { get; set; }
+
+        public string FileSize
+        {
+            get
+            {
+                return ByteSize.FromBytes(FileLength).ToString();
+            }
+        }
 
         public int RecordCount { get; set; }
 
