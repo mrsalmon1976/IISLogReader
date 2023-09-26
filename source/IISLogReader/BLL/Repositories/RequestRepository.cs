@@ -16,6 +16,10 @@ namespace IISLogReader.BLL.Repositories
         IEnumerable<RequestModel> GetByUriStemAggregate(int projectId, string uriStemAggregate);
 
         IEnumerable<RequestPageLoadTimeModel> GetPageLoadTimes(int projectId);
+
+        Task<long> GetTotalRequestCountAsync(int projectId);
+
+        Task<IEnumerable<RequestStatusCodeCount>> GetStatusCodeSummaryAsync(int projectId);
     }
 
     public class RequestRepository :IRequestRepository
@@ -59,5 +63,27 @@ namespace IISLogReader.BLL.Repositories
             return _dbContext.Query<RequestPageLoadTimeModel>(sql, new { ProjectId = projectId });
 
         }
+
+        public async Task<long> GetTotalRequestCountAsync(int projectId)
+        {
+            const string sql = @"SELECT COUNT(r.Id) 
+                FROM Requests r
+                INNER JOIN LogFiles lf on r.LogFileId = lf.Id
+                WHERE lf.ProjectId = @ProjectId";
+            return await _dbContext.ExecuteScalarAsync<long>(sql, new { ProjectId = projectId });
+
+        }
+
+        public async Task<IEnumerable<RequestStatusCodeCount>> GetStatusCodeSummaryAsync(int projectId)
+        {
+            const string sql = @"SELECT r.ProtocolStatus AS StatusCode
+                    , COUNT(r.Id) AS TotalCount
+                FROM Requests r
+                INNER JOIN LogFiles lf on r.LogFileId = lf.Id
+                WHERE lf.ProjectId = @ProjectId
+                GROUP BY r.ProtocolStatus";
+            return await _dbContext.QueryAsync<RequestStatusCodeCount>(sql, new { ProjectId = projectId });
+        }
+
     }
 }

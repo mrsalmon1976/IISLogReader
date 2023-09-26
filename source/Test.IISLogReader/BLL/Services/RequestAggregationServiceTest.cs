@@ -86,5 +86,59 @@ namespace Test.IISLogReader.BLL.Services
         }
 
         #endregion
+
+        #region GetRequestStatusCodeSummary
+
+        [Test]
+        public void GetRequestStatusCodeSummary_MultipleRequests_GroupsStatusCodes()
+        {
+            Random r = new Random();
+            List<RequestStatusCodeCount> requests100 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 100, 199);
+            List<RequestStatusCodeCount> requests200 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 200, 249);
+            List<RequestStatusCodeCount> requests250 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 250, 299);
+            List<RequestStatusCodeCount> requests300 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 300, 399);
+            List<RequestStatusCodeCount> requests400 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 400, 499);
+            List<RequestStatusCodeCount> requests500 = CreateRequestStatusCodeSummaries(r.Next(10, 100), 500, 599);
+
+            List<RequestStatusCodeCount> allRequests = new List<RequestStatusCodeCount>();
+            allRequests.AddRange(requests100);
+            allRequests.AddRange(requests200);
+            allRequests.AddRange(requests250);      // just to make sure we have a spread!
+            allRequests.AddRange(requests300);
+            allRequests.AddRange(requests400);
+            allRequests.AddRange(requests500);
+
+            // execute
+            RequestStatusCodeSummary result = _requestAggregationService.GetRequestStatusCodeSummary(allRequests);
+
+            // assert
+            Assert.That(result.InformationalCount, Is.EqualTo(requests100.Sum(x => x.TotalCount)));
+            Assert.That(result.SuccessCount, Is.EqualTo(requests200.Sum(x => x.TotalCount) + requests250.Sum(x => x.TotalCount)));
+            Assert.That(result.RedirectionCount, Is.EqualTo(requests300.Sum(x => x.TotalCount)));
+            Assert.That(result.ClientErrorCount, Is.EqualTo(requests400.Sum(x => x.TotalCount)));
+            Assert.That(result.ServerErrorCount, Is.EqualTo(requests500.Sum(x => x.TotalCount)));
+
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private List<RequestStatusCodeCount> CreateRequestStatusCodeSummaries(int requestCount, int minStatusCode, int maxStatusCode)
+        {
+            Random r = new Random();
+            List<RequestStatusCodeCount> requests = new List<RequestStatusCodeCount>();
+            for (int i = 0; i < requestCount; i++)
+            {
+                requests.Add(new RequestStatusCodeCount()
+                {
+                    StatusCode = r.Next(minStatusCode, maxStatusCode),
+                    TotalCount = r.Next(10, 1000)
+                });
+            }
+            return requests;
+        }
+
+        #endregion
     }
 }

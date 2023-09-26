@@ -1,8 +1,5 @@
 ﻿using AutoMapper;
 using Nancy;
-using Nancy.Authentication.Forms;
-using Nancy.Bootstrapper;
-using Nancy.Responses.Negotiation;
 using Nancy.Testing;
 using Newtonsoft.Json;
 using NSubstitute;
@@ -13,14 +10,9 @@ using IISLogReader.BLL.Validators;
 using IISLogReader.Modules;
 using IISLogReader.Navigation;
 using IISLogReader.ViewModels;
-using IISLogReader.ViewModels.Login;
-using IISLogReader.ViewModels.User;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IISLogReader.ViewModels.Project;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
@@ -28,6 +20,10 @@ using IISLogReader.BLL.Repositories;
 using System.IO;
 using System.Net.Http;
 using IISLogReader.ViewModels.LogFile;
+using System.Threading.Tasks;
+using IISLogReader.BLL.Services;
+using System.Security.Policy;
+using Nancy.Security;
 
 namespace Test.IISLogReader.Modules
 {
@@ -42,6 +38,7 @@ namespace Test.IISLogReader.Modules
         private ILogFileRepository _logFileRepo;
         private IRequestRepository _requestRepo;
         private IProjectRequestAggregateRepository _projectRequestAggregateRepo;
+        private IRequestAggregationService _requestAggregationService;
 
         [SetUp]
         public void ProjectModuleTest_SetUp()
@@ -54,6 +51,7 @@ namespace Test.IISLogReader.Modules
             _logFileRepo = Substitute.For<ILogFileRepository>();
             _requestRepo = Substitute.For<IRequestRepository>();
             _projectRequestAggregateRepo = Substitute.For<IProjectRequestAggregateRepository>();
+            _requestAggregationService = Substitute.For<IRequestAggregationService>();
 
             Mapper.Initialize((cfg) =>
             {
@@ -76,7 +74,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -104,7 +102,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -142,7 +140,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -170,7 +168,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -207,7 +205,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -228,7 +226,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -257,7 +255,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -288,7 +286,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -316,7 +314,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -345,6 +343,189 @@ namespace Test.IISLogReader.Modules
 
         #endregion
 
+        #region Overview
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void Overview_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
+                    .RequestStartup((container, pipelines, context) => {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+
+            // execute
+            var url = Actions.Project.Overview(projectId);
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _requestRepo.DidNotReceive().GetTotalRequestCountAsync(Arg.Any<int>());
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_TotalRequestCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            long totalRequestCount = new Random().Next(100, 100000);
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(new RequestStatusCodeSummary());
+            _requestRepo.GetTotalRequestCountAsync(projectId).Returns(Task.FromResult(totalRequestCount));
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetTotalRequestCountAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.TotalRequestCount, Is.EqualTo(totalRequestCount));
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_RequestSuccessCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            long successCount = new Random().Next(100, 100000);
+
+            RequestStatusCodeSummary requestStatusCodeSummary = new RequestStatusCodeSummary();
+            requestStatusCodeSummary.SuccessCount = successCount;
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(requestStatusCodeSummary);
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetStatusCodeSummaryAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.SuccessRequestCount, Is.EqualTo(successCount));
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_RequestClientErrorCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            long clientErrorCount = new Random().Next(100, 100000);
+
+            RequestStatusCodeSummary requestStatusCodeSummary = new RequestStatusCodeSummary();
+            requestStatusCodeSummary.ClientErrorCount = clientErrorCount;
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(requestStatusCodeSummary);
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetStatusCodeSummaryAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.ClientErrorRequestCount, Is.EqualTo(clientErrorCount));
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_RequestServerErrorCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            long serverErrorCount = new Random().Next(100, 100000);
+
+            RequestStatusCodeSummary requestStatusCodeSummary = new RequestStatusCodeSummary();
+            requestStatusCodeSummary.ServerErrorCount = serverErrorCount;
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(requestStatusCodeSummary);
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetStatusCodeSummaryAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.ServerErrorRequestCount, Is.EqualTo(serverErrorCount));
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_RequestRedirectionCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            long redirectionCount = new Random().Next(100, 100000);
+
+            RequestStatusCodeSummary requestStatusCodeSummary = new RequestStatusCodeSummary();
+            requestStatusCodeSummary.RedirectionCount = redirectionCount;
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(requestStatusCodeSummary);
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetStatusCodeSummaryAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.RedirectionRequestCount, Is.EqualTo(redirectionCount));
+
+        }
+
+        [Test]
+        public void Overview_ValidProjectId_LogFileCountCorrectlyLoaded()
+        {
+            int projectId = new Random().Next(1, 1000);
+            int logFileCount = new Random().Next(100, 100000);
+
+            _requestAggregationService.GetRequestStatusCodeSummary(Arg.Any<IEnumerable<RequestStatusCodeCount>>()).Returns(new RequestStatusCodeSummary());
+            _logFileRepo.GetCountByProjectAsync(projectId).Returns(Task.FromResult(logFileCount));
+
+            // setup
+            var url = Actions.Project.Overview(projectId);
+
+            // execute
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _logFileRepo.Received(1).GetCountByProjectAsync(projectId).GetAwaiter().GetResult();
+
+            ProjectOverviewViewModel result = JsonConvert.DeserializeObject<ProjectOverviewViewModel>(response.Body.AsString());
+            Assert.That(result.LogFileCount, Is.EqualTo(logFileCount));
+
+        }
+
+        #endregion
+
         #region RequestsByAggregate
 
         [TestCase("abc")]
@@ -354,7 +535,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -381,7 +562,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -410,7 +591,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                         context.ViewBag.CurrentUserName = currentUser.UserName;
@@ -456,7 +637,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -484,7 +665,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -523,7 +704,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -542,7 +723,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -582,7 +763,7 @@ namespace Test.IISLogReader.Modules
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             currentUser.Claims = new string[] { Claims.ProjectEdit };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -626,7 +807,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -654,7 +835,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
                     })
@@ -680,7 +861,7 @@ namespace Test.IISLogReader.Modules
             // setup
             var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                     .RequestStartup((container, pipelines, context) => {
                     })
                 );
@@ -709,7 +890,7 @@ namespace Test.IISLogReader.Modules
             _projectRepo.GetById(project.Id).Returns(project);
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                         .RootPathProvider(new TestRootPathProvider())
                         .RequestStartup((container, pipelines, context) => {
                         context.CurrentUser = currentUser;
@@ -755,7 +936,7 @@ namespace Test.IISLogReader.Modules
             _projectRepo.GetById(project.Id).Returns(project);
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                         .RootPathProvider(new TestRootPathProvider())
                         .RequestStartup((container, pipelines, context) => {
                             context.CurrentUser = currentUser;
@@ -794,7 +975,7 @@ namespace Test.IISLogReader.Modules
             _projectRepo.GetById(project.Id).Returns(project);
 
             var browser = new Browser((bootstrapper) =>
-                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo))
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
                         .RootPathProvider(new TestRootPathProvider())
                         .RequestStartup((container, pipelines, context) => {
                             context.CurrentUser = currentUser;
@@ -819,6 +1000,37 @@ namespace Test.IISLogReader.Modules
             response.Body["#project-buttons-row"].ShouldNotExist();
             response.Body["#tab-settings-pill"].ShouldNotExist();
             response.Body["#tab-settings"].ShouldNotExist();
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private Browser CreateBrowser(IUserIdentity currentUser)
+        {
+            var browser = new Browser((bootstrapper) =>
+                bootstrapper.Module(new ProjectModule(_dbContext, _projectValidator, _createProjectCommand, _deleteProjectCommand, _projectRepo, _logFileRepo, _requestRepo, _projectRequestAggregateRepo, _requestAggregationService))
+                    .RequestStartup((container, pipelines, context) =>
+                    {
+                        context.CurrentUser = currentUser;
+                    })
+                );
+            return browser;
+        }
+
+        private BrowserResponse ExecuteGet(string url)
+        {
+            var currentUser = new UserIdentity() { Id = Guid.NewGuid(), UserName = "Joe Soap" };
+            var browser = CreateBrowser(currentUser);
+
+            // execute
+            var response = browser.Get(url, (with) =>
+            {
+                with.HttpRequest();
+                with.FormsAuth(currentUser.Id, new Nancy.Authentication.Forms.FormsAuthenticationConfiguration());
+            });
+            return response;
+
         }
 
         #endregion

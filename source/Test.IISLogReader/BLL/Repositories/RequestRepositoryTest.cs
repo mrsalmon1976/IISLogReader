@@ -206,13 +206,138 @@ namespace Test.IISLogReader.BLL.Repositories
         }
 
 
+        /// <summary>
+        /// Tests that the GetPageLoadTimes loads correct averages
+        /// </summary>
+        [Test]
+        public void GetTotalRequestCountAsync_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
 
-        private W3CEvent CreateW3CEvent(string uriStem, int timeTaken)
+            ProjectModel firstProject = DataHelper.CreateProjectModel(1);
+            long firstProjectRequestCount = new Random().Next(101, 1000);
+            List<W3CEvent> firstProjectEvents = CreateW3CEvents(firstProjectRequestCount);
+
+            ProjectModel secondProject = DataHelper.CreateProjectModel(5);
+            long secondProjectRequestCount = new Random().Next(10, 100);
+            List<W3CEvent> secondProjectEvents = CreateW3CEvents(secondProjectRequestCount);
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+                dbContext.BeginTransaction();
+
+                ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
+                IRequestRepository requestRepo = new RequestRepository(dbContext);
+
+                // create the projects
+                DataHelper.InsertProjectModel(dbContext, firstProject);
+                DataHelper.InsertProjectModel(dbContext, secondProject);
+
+                // create the log file records
+                LogFileModel firstLogFile = DataHelper.CreateLogFileModel(firstProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, firstLogFile);
+                LogFileModel secondLogFile = DataHelper.CreateLogFileModel(secondProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, secondLogFile);
+
+                // create the requests
+                createRequestBatchCommand.Execute(firstLogFile.Id, firstProjectEvents);
+                createRequestBatchCommand.Execute(secondLogFile.Id, secondProjectEvents);
+
+                long firstResult = requestRepo.GetTotalRequestCountAsync(firstProject.Id).Result;
+                long secondResult = requestRepo.GetTotalRequestCountAsync(secondProject.Id).Result;
+
+                Assert.That(firstResult, Is.EqualTo(firstProjectRequestCount));
+                Assert.That(secondResult, Is.EqualTo(secondProjectRequestCount));
+
+            }
+
+        }
+
+        /// <summary>
+        /// Tests that the GetPageLoadTimes loads correct averages
+        /// </summary>
+        [Test]
+        public void GetStatusCodeSummaryAsync_Integration_ReturnsData()
+        {
+            Random r = new Random();
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+
+            ProjectModel firstProject = DataHelper.CreateProjectModel(1);
+            long requests200 = r.Next(10, 200);
+            long requests300 = r.Next(10, 200);
+            long requests400 = r.Next(10, 200);
+            long requests500 = r.Next(10, 200);
+            List<W3CEvent> firstProjectEvents = CreateW3CEvents(requests200, 200);
+            firstProjectEvents.AddRange(CreateW3CEvents(requests300, 300));
+            firstProjectEvents.AddRange(CreateW3CEvents(requests400, 400));
+            firstProjectEvents.AddRange(CreateW3CEvents(requests500, 500));
+
+            ProjectModel secondProject = DataHelper.CreateProjectModel(5);
+            long secondProjectRequestCount = r.Next(10, 100);
+            List<W3CEvent> secondProjectEvents = CreateW3CEvents(secondProjectRequestCount);
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+                dbContext.BeginTransaction();
+
+                ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
+                IRequestRepository requestRepo = new RequestRepository(dbContext);
+
+                // create the projects
+                DataHelper.InsertProjectModel(dbContext, firstProject);
+                DataHelper.InsertProjectModel(dbContext, secondProject);
+
+                // create the log file records
+                LogFileModel firstLogFile = DataHelper.CreateLogFileModel(firstProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, firstLogFile);
+                LogFileModel secondLogFile = DataHelper.CreateLogFileModel(secondProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, secondLogFile);
+
+                // create the requests
+                createRequestBatchCommand.Execute(firstLogFile.Id, firstProjectEvents);
+                createRequestBatchCommand.Execute(secondLogFile.Id, secondProjectEvents);
+
+                IEnumerable<RequestStatusCodeCount> result = requestRepo.GetStatusCodeSummaryAsync(firstProject.Id).Result;
+
+                Assert.That(result.Count(), Is.EqualTo(4));
+
+                var expectedSummary = result.SingleOrDefault(x => x.StatusCode == 200);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests200));
+
+                expectedSummary = result.SingleOrDefault(x => x.StatusCode == 300);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests300));
+
+                expectedSummary = result.SingleOrDefault(x => x.StatusCode == 400);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests400));
+
+                expectedSummary = result.SingleOrDefault(x => x.StatusCode == 500);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests500));
+
+            }
+
+        }
+
+
+        private W3CEvent CreateW3CEvent(string uriStem, int timeTaken, int statusCode = 200)
         {
             W3CEvent evt = new W3CEvent();
             evt.cs_uri_stem = uriStem;
             evt.time_taken = timeTaken.ToString();
+            evt.sc_status = statusCode.ToString();
             return evt;
+        }
+
+        private List<W3CEvent> CreateW3CEvents(long count, int statusCode = 200)
+        {
+            List<W3CEvent> events = new List<W3CEvent>();
+            Random r = new Random();
+            for (int i=0; i < count; i++)
+            {
+                events.Add(CreateW3CEvent(Guid.NewGuid().ToString(), r.Next(1, 10000), statusCode));
+            }
+            return events;
         }
 
     }

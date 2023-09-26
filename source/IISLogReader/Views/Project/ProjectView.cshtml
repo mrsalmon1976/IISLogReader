@@ -41,15 +41,19 @@
             <div class="panel panel-default">
                 <div class="panel-body tabs">
                     <ul id="tab-project" class="nav nav-pills">
-                        <li class="active"><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
+                        <li class="active"><a href="#tab-project-overview" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Overview</a></li>
+                        <li><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
                         <li><a href="#tab-loadtimes" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Load Times</a></li>
                         @if (Model.IsProjectEditor)
                         {
-                        <li id="tab-settings-pill"><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
+                            <li id="tab-settings-pill"><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
                         }
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane fade in active" id="tab-project-files">
+                        <div class="tab-pane fade in active" id="tab-project-overview">
+                            @Html.Partial("_ProjectOverviewTab")
+                        </div>
+                        <div class="tab-pane fade" id="tab-project-files">
                             @Html.Partial("_ProjectFileTab")
                         </div>
                         <div class="tab-pane fade" id="tab-loadtimes">
@@ -57,9 +61,9 @@
                         </div>
                         @if (Model.IsProjectEditor)
                         {
-                        <div class="tab-pane fade" id="tab-settings">
-                            @Html.Partial("_ProjectSettingsTab")
-                        </div>
+                            <div class="tab-pane fade" id="tab-settings">
+                                @Html.Partial("_ProjectSettingsTab")
+                            </div>
                         }
                     </div>
                 </div>

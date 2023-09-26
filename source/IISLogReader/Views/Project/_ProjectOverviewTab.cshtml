@@ -1,0 +1,66 @@
+﻿<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default ">
+            <div class="panel-heading">
+                Request overview
+                <span class="pull-right clickable panel-toggle panel-button-tab-left"><em class="fa fa-toggle-up"></em></span>
+                <div v-if="isOverviewLoading" style="text-align: center">
+                    <i class="fa fa-2x fa-spin fa-spinner" data-fa-transform="rotate-45"></i>
+                </div>
+
+            </div>
+            <div class="panel-body">
+                <div class="col-md-11 no-padding">
+                    <div class="row progress-labels">
+                        <div class="col-sm-6">
+                            Total requests ({{ logFileCount }} log files)
+                        </div>
+                        <div class="col-sm-6" style="text-align: right;">
+                            {{ overviewTotalRequestCount }} (100%)
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div data-percentage="0%" style="width: 100%;" class="progress-bar progress-bar-blue" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="row progress-labels">
+                        <div class="col-sm-6">2xx Success</div>
+                        <div class="col-sm-6" style="text-align: right;">{{ overviewSuccessRequestCount }} ({{ overviewSuccessRequestPercentage }}%)</div>
+                    </div>
+                    <div class="progress">
+                        <div data-percentage="0%" v-bind:style="successWidthCalculated" class="progress-bar progress-bar-teal" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="row progress-labels">
+                        <div class="col-sm-6">3xx Redirection</div>
+                        <div class="col-sm-6" style="text-align: right;">{{ overviewRedirectionRequestCount }} ({{ overviewRedirectionRequestPercentage }}%)</div>
+                    </div>
+                    <div class="progress">
+                        <div data-percentage="0%" v-bind:style="redirectionWidthCalculated" class="progress-bar progress-bar-orange" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="row progress-labels">
+                        <div class="col-sm-6">4xx Client Errors</div>
+                        <div class="col-sm-6" style="text-align: right;">{{ overviewClientErrorRequestCount }} ({{ overviewClientErrorRequestPercentage }}%)</div>
+                    </div>
+                    <div class="progress">
+                        <div data-percentage="0%" v-bind:style="clientErrorWidthCalculated" class="progress-bar progress-bar-orange" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="row progress-labels">
+                        <div class="col-sm-6">5xx Server Errors</div>
+                        <div class="col-sm-6" style="text-align: right;">{{ overviewServerErrorRequestCount }} ({{ overviewServerErrorRequestPercentage }}%)</div>
+                    </div>
+                    <div class="progress">
+                        <div data-percentage="0%" v-bind:style="serverErrorWidthCalculated" class="progress-bar progress-bar-red" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--/.col-->
+
+    <!--/.col-->
+</div>
+
+
+

@@ -193,6 +193,8 @@
     <Compile Include="BLL\Models\ProjectModel.cs" />
     <Compile Include="BLL\Models\RequestModel.cs" />
     <Compile Include="BLL\Models\RequestPageLoadTimeModel.cs" />
+    <Compile Include="BLL\Models\RequestStatusCodeCount.cs" />
+    <Compile Include="BLL\Models\RequestStatusCodeSummary.cs" />
     <Compile Include="BLL\Models\UserModel.cs" />
     <Compile Include="BLL\Repositories\ProjectRequestAggregateRepository.cs" />
     <Compile Include="BLL\Repositories\LogFileRepository.cs" />
@@ -223,6 +225,7 @@
     <Compile Include="Modules\ProjectRequestAggregateModule.cs" />
     <Compile Include="ViewModels\LogFile\LogFileViewModel.cs" />
     <Compile Include="ViewModels\Project\ProjectAggregateViewModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectOverviewViewModel.cs" />
     <Compile Include="ViewModels\Project\RequestUriAggregateViewModel.cs" />
     <Compile Include="ViewModels\SaveResultModel.cs" />
     <Compile Include="WebConsoleJobActivator.cs" />
@@ -290,6 +293,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\Project\ProjectView.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Project\_ProjectOverviewTab.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Views\Project\_ProjectSettingsTab.cshtml">

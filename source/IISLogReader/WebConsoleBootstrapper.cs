@@ -3,21 +3,15 @@ using Nancy.Authentication.Forms;
 using Nancy.Bootstrapper;
 using Nancy.TinyIoc;
 using Nancy.Extensions;
-using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.Reflection;
 using System.Linq;
 using IISLogReader.Configuration;
-using System.IO;
 using SystemWrapper.IO;
 using IISLogReader.BLL.Security;
-using Encryption;
 using AutoMapper;
 using IISLogReader.BLL.Models;
 using IISLogReader.ViewModels.User;
-using System.Diagnostics;
 using IISLogReader.BLL.Data;
 using IISLogReader.ViewModels.Project;
 using IISLogReader.BLL.Repositories;
@@ -25,12 +19,16 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Services;
 using IISLogReader.BLL.Data.Db;
 using IISLogReader.BLL.Validators;
+using Nancy.Cryptography;
 
 namespace IISLogReader
 {
 
     public class WebConsoleBootstrapper : DefaultNancyBootstrapper
     {
+
+        private static CryptographyConfiguration _cryptographyConfiguration;
+
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines)
         {
 
@@ -41,6 +39,11 @@ namespace IISLogReader
             IAppSettings settings = new AppSettings();
             container.Register<IAppSettings>(settings);
 
+            // set up the crypto config
+            _cryptographyConfiguration = new CryptographyConfiguration(
+                new RijndaelEncryptionProvider(new PassphraseKeyGenerator($"AES_{settings.SecureKey}", new byte[] { 101, 2, 103, 4, 105, 6, 107, 8 })),
+                new DefaultHmacProvider(new PassphraseKeyGenerator($"HMAC_{settings.SecureKey}", new byte[] { 101, 2, 103, 4, 105, 6, 107, 8 })));
+
             // IO Wrappers
             container.Register<IDirectoryWrap, DirectoryWrap>();
             //container.Register<IPathWrap, PathWrap>();
@@ -48,7 +51,7 @@ namespace IISLogReader
             //container.Register<IPathHelper, PathHelper>();
 
             // security
-            container.Register<IEncryptionProvider, AESGCM>();
+            container.Register<IISLogReader.BLL.Security.Encryption.IEncryptionProvider, IISLogReader.BLL.Security.Encryption.AESGCM>();
             container.Register<IPasswordProvider, PasswordProvider>();
 
             // set up mappings
@@ -120,6 +123,7 @@ namespace IISLogReader
             base.RequestStartup(container, pipelines, context);
             var formsAuthConfiguration = new FormsAuthenticationConfiguration()
             {
+                CryptographyConfiguration = _cryptographyConfiguration,
                 RedirectUrl = "~/login",
                 UserMapper = container.Resolve<IUserMapper>(),
                 DisableRedirect = context.Request.IsAjaxRequest()    

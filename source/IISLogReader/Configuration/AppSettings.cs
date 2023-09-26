@@ -22,6 +22,9 @@ namespace IISLogReader.Configuration
         /// </summary>
         int Port { get; }
 
+        string SecureKey { get; }
+
+
     }
 
     public class AppSettings : IAppSettings
@@ -55,6 +58,18 @@ namespace IISLogReader.Configuration
                 return Int32.Parse(ConfigurationManager.AppSettings["Port"]);
             }
         }
+
+        /// <summary>
+        /// Gets/sets the application security key
+        /// </summary>
+        public string SecureKey
+        {
+            get
+            {
+                return (ConfigurationManager.AppSettings["SecureKey"] ?? "This is the Def@ult IISLogReader security key if it is not specified in app.config");
+            }
+        }
+
 
     }
 }

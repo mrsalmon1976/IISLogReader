@@ -152,5 +152,53 @@ namespace Test.IISLogReader.BLL.Repositories
 
         }
 
+
+        /// <summary>
+        /// Tests that the GetByProject method all files for a specific project
+        /// </summary>
+        [Test]
+        public void GetCountByProjectAsync_Integration_ReturnsData()
+        {
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+
+                ILogFileRepository logFileRepo = new LogFileRepository(dbContext);
+
+                // create the projects
+                ProjectModel projectA = DataHelper.CreateProjectModel();
+                DataHelper.InsertProjectModel(dbContext, projectA);
+                ProjectModel projectZ = DataHelper.CreateProjectModel();
+                DataHelper.InsertProjectModel(dbContext, projectZ);
+
+                // create the log file records for ProjectA, as well as some for a different project
+                int numRecords = new Random().Next(5, 10);
+                for (var i = 0; i < numRecords; i++)
+                {
+                    LogFileModel logFile = DataHelper.CreateLogFileModel();
+                    logFile.ProjectId = projectA.Id;
+                    logFile.FileName = "ProjectA_" + i.ToString();
+                    DataHelper.InsertLogFileModel(dbContext, logFile);
+                }
+
+                // create the log file records for ProjectB that should be excluded by the query
+                for (var i = 0; i < 5; i++)
+                {
+                    LogFileModel logFile = DataHelper.CreateLogFileModel();
+                    logFile.ProjectId = projectZ.Id;
+                    logFile.FileName = "ProjectZ_" + i.ToString();
+                    DataHelper.InsertLogFileModel(dbContext, logFile);
+                }
+
+
+                int result = logFileRepo.GetCountByProjectAsync(projectA.Id).Result;
+                Assert.IsNotNull(result);
+                Assert.That(result, Is.EqualTo(numRecords));
+            }
+
+        }
+
     }
 }

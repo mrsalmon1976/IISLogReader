@@ -50,6 +50,13 @@ namespace IISLogReader.BLL.Data
         T ExecuteScalar<T>(string sql, object param = null);
 
         /// <summary>
+        /// Executes an async query against the database
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        Task<T> ExecuteScalarAsync<T>(string sql, object param = null);
+
+        /// <summary>
         /// Initialises the application database.  Creates a new file and all tables if they do not exist.
         /// </summary>
         void Initialise();
@@ -62,6 +69,8 @@ namespace IISLogReader.BLL.Data
         /// <param name="param"></param>
         /// <returns></returns>
         IEnumerable<T> Query<T>(string sql, object param = null);
+
+        Task<IEnumerable<T>> QueryAsync<T>(string sql, object param = null);
 
         /// <summary>
         /// Rolls back the current transaction (if supported by the DbContext)
@@ -115,6 +124,14 @@ namespace IISLogReader.BLL.Data
         public abstract T ExecuteScalar<T>(string sql, object param = null);
 
         /// <summary>
+        /// Executes a query against the database
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        public abstract Task<T> ExecuteScalarAsync<T>(string sql, object param = null);
+
+
+        /// <summary>
         /// Initialises the application database.  Creates a new file and all tables if they do not exist.
         /// </summary>
         public abstract void Initialise();
@@ -127,6 +144,8 @@ namespace IISLogReader.BLL.Data
         /// <param name="param"></param>
         /// <returns></returns>
         public abstract IEnumerable<T> Query<T>(string sql, object param = null);
+
+        public abstract Task<IEnumerable<T>> QueryAsync<T>(string sql, object param = null);
 
         protected string ReadResource(string qualifiedName)
         {

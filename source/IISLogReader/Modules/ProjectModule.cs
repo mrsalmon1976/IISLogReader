@@ -15,6 +15,8 @@ using IISLogReader.BLL.Commands;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.ViewModels.LogFile;
+using System.Threading.Tasks;
+using IISLogReader.BLL.Services;
 
 namespace IISLogReader.Modules
 {
@@ -29,11 +31,13 @@ namespace IISLogReader.Modules
         private ILogFileRepository _logFileRepo;
         private IRequestRepository _requestRepo;
         private IProjectRequestAggregateRepository _projectRequestAggregateRepo;
+        private IRequestAggregationService _requestAggregationService;
 
         public ProjectModule(IDbContext dbContext, IProjectValidator projectValidator
             , ICreateProjectCommand createProjectCommand, IDeleteProjectCommand deleteProjectCommand
             , IProjectRepository projectRepo, ILogFileRepository logFileRepo, IRequestRepository requestRepo
-            , IProjectRequestAggregateRepository projectRequestAggregateRepo)
+            , IProjectRequestAggregateRepository projectRequestAggregateRepo
+            , IRequestAggregationService requestAggregationService)
         {
             _dbContext = dbContext;
             _projectValidator = projectValidator;
@@ -43,6 +47,7 @@ namespace IISLogReader.Modules
             _logFileRepo = logFileRepo;
             _requestRepo = requestRepo;
             _projectRequestAggregateRepo = projectRequestAggregateRepo;
+            _requestAggregationService = requestAggregationService;
 
             Post[Actions.Project.Aggregates()] = x =>
             {
@@ -62,6 +67,11 @@ namespace IISLogReader.Modules
             {
                 this.RequiresClaims(new[] { Claims.ProjectEdit });
                 return DeleteProject(x.projectId);
+            };
+
+            Get[Actions.Project.Overview()] = x =>
+            {
+                return Overview(x.projectId);
             };
 
             Get[Actions.Project.RequestsByAggregate()] = x =>
@@ -183,6 +193,37 @@ namespace IISLogReader.Modules
             AddScript(Scripts.ProjectView);
             return this.View[Views.Project.View, viewModel];
         }
+
+        public dynamic Overview(dynamic pId)
+        {
+            // make sure the id is a valid integer
+            int projectId = 0;
+            if (!Int32.TryParse((pId ?? "").ToString(), out projectId))
+            {
+                return HttpStatusCode.BadRequest;
+            }
+
+            Task<long> totalRequestCountTask = _requestRepo.GetTotalRequestCountAsync(projectId);
+            Task<IEnumerable<RequestStatusCodeCount>> requestCodeSummaryTask = _requestRepo.GetStatusCodeSummaryAsync(projectId);
+            Task<int> logFileCount = _logFileRepo.GetCountByProjectAsync(projectId);
+
+            Task.WhenAll(totalRequestCountTask, requestCodeSummaryTask, logFileCount);
+
+            var groupedStatusCodes = _requestAggregationService.GetRequestStatusCodeSummary(requestCodeSummaryTask.Result);
+
+            // set up the view model
+            ProjectOverviewViewModel viewModel = new ProjectOverviewViewModel();
+            viewModel.ProjectId = projectId;
+            viewModel.TotalRequestCount = totalRequestCountTask.Result;
+            viewModel.SuccessRequestCount = groupedStatusCodes.SuccessCount;
+            viewModel.RedirectionRequestCount = groupedStatusCodes.RedirectionCount;
+            viewModel.ClientErrorRequestCount = groupedStatusCodes.ClientErrorCount;
+            viewModel.ServerErrorRequestCount = groupedStatusCodes.ServerErrorCount;
+            viewModel.LogFileCount = logFileCount.Result;
+
+            return this.Response.AsJson(viewModel);
+        }
+
 
         public dynamic RequestsByAggregate(dynamic pId)
         {

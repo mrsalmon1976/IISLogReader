@@ -101,6 +101,22 @@ namespace IISLogReader.Navigation
                 return Actions.Project.Delete(projectId.ToString());
             }
 
+            public static string Overview()
+            {
+                return "/project/{projectId}/overview";
+            }
+
+            public static string Overview(string projectId)
+            {
+                return Actions.Project.Overview().Replace("{projectId}", projectId);
+            }
+
+            public static string Overview(int projectId)
+            {
+                return Actions.Project.Overview(projectId.ToString());
+            }
+
+
             public static string RequestsByAggregate()
             {
                 return "/project/{projectId}/requests";

@@ -16,6 +16,8 @@ namespace IISLogReader.BLL.Repositories
 
         IEnumerable<LogFileModel> GetByProject(int projectId);
 
+        Task<int> GetCountByProjectAsync(int projectId);
+
     }
     public class LogFileRepository : ILogFileRepository
     {
@@ -42,6 +44,12 @@ namespace IISLogReader.BLL.Repositories
         {
             const string sql = "SELECT * FROM LogFiles WHERE ProjectId = @ProjectId";
             return _dbContext.Query<LogFileModel>(sql, new { ProjectId = projectId });
+        }
+
+        public Task<int> GetCountByProjectAsync(int projectId)
+        {
+            const string sql = "SELECT COUNT(*) FROM LogFiles WHERE ProjectId = @ProjectId";
+            return _dbContext.ExecuteScalarAsync<int>(sql, new { ProjectId = projectId });
         }
 
     }

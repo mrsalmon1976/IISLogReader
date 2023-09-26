@@ -15,7 +15,7 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 
-namespace Encryption
+namespace IISLogReader.BLL.Security.Encryption
 {
     public interface IEncryptionProvider
     {

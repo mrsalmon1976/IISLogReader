@@ -73,6 +73,11 @@ namespace IISLogReader.BLL.Data
             return _conn.Query<T>(sql, param, this.Transaction);
         }
 
+        public override Task<IEnumerable<T>> QueryAsync<T>(string sql, object param = null)
+        {
+            return _conn.QueryAsync<T>(sql, param, this.Transaction);
+        }
+
         /// <summary>
         /// Executes a query against the database
         /// </summary>
@@ -95,6 +100,16 @@ namespace IISLogReader.BLL.Data
         public override T ExecuteScalar<T>(string sql, object param = null)
         {
             return _conn.ExecuteScalar<T>(sql, param, this.Transaction);
+        }
+
+        /// <summary>
+        /// Executes a query against the database
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        public override async Task<T> ExecuteScalarAsync<T>(string sql, object param = null)
+        {
+            return await _conn.ExecuteScalarAsync<T>(sql, param, this.Transaction);
         }
 
         /// <summary>

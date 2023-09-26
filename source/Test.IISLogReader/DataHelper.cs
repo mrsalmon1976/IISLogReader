@@ -26,11 +26,11 @@ namespace Test.IISLogReader
             return model;
         }
 
-        public static ProjectModel CreateProjectModel()
+        public static ProjectModel CreateProjectModel(int? id = null)
         {
             Random r = new Random();
             ProjectModel model = new ProjectModel();
-            model.Id = r.Next(1, 1000);
+            model.Id = (id ?? r.Next(1, 1000));
             model.Name = Path.GetRandomFileName();
             return model;
         }

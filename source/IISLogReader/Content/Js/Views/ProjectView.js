@@ -16,7 +16,18 @@ $(document).ready(function () {
             aggregateIsIgnored: false,
             aggregateTestTextDefault: 'No regular expression or test URI captured',
             aggregateTestText: this.aggregateTestTextDefault,
-            isProjectEditor: $('#isProjectEditor').val()
+            isProjectEditor: $('#isProjectEditor').val(),
+            overviewTotalRequestCount: 0,
+            overviewSuccessRequestCount: 0,
+            overviewSuccessRequestPercentage: 0,
+            overviewRedirectionRequestCount: 0,
+            overviewRedirectionRequestPercentage: 0,
+            overviewClientErrorRequestCount: 0,
+            overviewClientErrorRequestPercentage: 0,
+            overviewServerErrorRequestCount: 0,
+            overviewServerErrorRequestPercentage: 0,
+            logFileCount: 0,
+            isOverviewLoading: true
         },
         methods: {
             deleteProject() {
@@ -27,10 +38,10 @@ $(document).ready(function () {
                     dataType: "json"
                 }).done(function (response) {
                     window.location.href = '/';
-                    })
-                .fail(function (jqXHR, textStatus) {
-                    alert("Request failed: " + textStatus);
-                });
+                })
+                    .fail(function (jqXHR, textStatus) {
+                        alert("Request failed: " + textStatus);
+                    });
             },
             initaliseAvgLoadTimesGrid: function (projectId) {
                 var that = this;
@@ -137,8 +148,8 @@ $(document).ready(function () {
                         }).done(function (response) {
                             that.reloadAll();
                         }).fail(function (jqXHR, textStatus) {
-                                alert("Failed to delete file: " + textStatus);
-                            });
+                            alert("Failed to delete file: " + textStatus);
+                        });
                     }
 
                 });
@@ -170,8 +181,7 @@ $(document).ready(function () {
                         { name: "id", title: "Id", visible: false, type: "number" },
                         { name: "regularExpression", title: "Regular Expression", type: "text", width: 150 },
                         {
-                            name: "aggregateTarget", title: "Aggregate URI", type: "text", cellRenderer: function (value, item)
-                            {
+                            name: "aggregateTarget", title: "Aggregate URI", type: "text", cellRenderer: function (value, item) {
                                 if (item.isIgnored) {
                                     return '<td class="cell-ignored">IGNORED</td>';
                                 }
@@ -219,6 +229,33 @@ $(document).ready(function () {
                     }
                 });
             },
+            loadOverview: function () {
+                var that = this;
+                var pid = this.projectId;
+                that.isOverviewLoading = true;
+                $.ajax({
+                    url: '/project/' + pid + '/overview',
+                    method: 'GET',
+                    dataType: "json"
+                }).done(function (response) {
+                    that.logFileCount = response.logFileCount;
+                    that.overviewTotalRequestCount = response.totalRequestCount;
+                    if (response.totalRequestCount > 0) {
+                        that.overviewSuccessRequestCount = response.successRequestCount;
+                        that.overviewSuccessRequestPercentage = parseInt(response.successRequestCount / response.totalRequestCount * 100);
+                        that.overviewRedirectionRequestCount = response.redirectionRequestCount;
+                        that.overviewRedirectionRequestPercentage = parseInt(response.redirectionRequestCount / response.totalRequestCount * 100);
+                        that.overviewClientErrorRequestCount = response.clientErrorRequestCount;
+                        that.overviewClientErrorRequestPercentage = parseInt(response.clientErrorRequestCount / response.totalRequestCount * 100);
+                        that.overviewServerErrorRequestCount = response.serverErrorRequestCount;
+                        that.overviewServerErrorRequestPercentage = parseInt(response.serverErrorRequestCount / response.totalRequestCount * 100);
+                    }
+                    that.isOverviewLoading = false;
+                })
+                    .fail(function (jqXHR, textStatus) {
+                        alert("Request failed: " + textStatus);
+                    });
+            },
             onAddProjectFilesClick: function () {
                 $('#dlg-project-files').modal('show');
             },
@@ -239,7 +276,7 @@ $(document).ready(function () {
                     if (this.aggregateIsIgnored) {
                         this.aggregateTestText = 'Success!  "' + this.aggregateTest + '" will be ignored';
                     }
-                    else { 
+                    else {
                         this.aggregateTestText = 'Success!  "' + this.aggregateTest + '" will be transformed into "' + this.aggregateTarget + '"';
                     }
                     eleText.addClass('bg-success');
@@ -320,10 +357,33 @@ $(document).ready(function () {
                     clearInterval(this.countdownTimer);
                     this.countdownTimer = null;
                 }
+                this.loadOverview();
                 $("#grid-project-files").jsGrid("loadData");
                 $("#grid-project-load-times").jsGrid("loadData");
                 $("#grid-settings-aggregates").jsGrid("loadData");
             }
+        },
+        computed: {
+            clientErrorWidthCalculated: function() {
+                return {
+                    width: this.overviewClientErrorRequestPercentage + '%'
+                }
+            },
+            redirectionWidthCalculated: function () {
+                return {
+                    width: this.overviewRedirectionRequestPercentage + '%'
+                }
+            },
+            serverErrorWidthCalculated: function () {
+                return {
+                    width: this.overviewServerErrorRequestPercentage + '%'
+                }
+            },
+            successWidthCalculated: function () {
+                return {
+                    width: this.overviewSuccessRequestPercentage + '%'
+                }
+            },
         },
         mounted: function () {
             this.initialiseDropzone();

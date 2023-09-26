@@ -11,6 +11,8 @@ namespace IISLogReader.BLL.Services
     public interface IRequestAggregationService
     {
         string GetAggregatedUriStem(string originalUriStem, IEnumerable<ProjectRequestAggregateModel> requestAggregates);
+
+        RequestStatusCodeSummary GetRequestStatusCodeSummary(IEnumerable<RequestStatusCodeCount> requestStatusCodeCounts);
     }
 
     public class RequestAggregationService : IRequestAggregationService
@@ -38,5 +40,24 @@ namespace IISLogReader.BLL.Services
             // no match found, return original
             return originalUriStem;
         }
+
+        public RequestStatusCodeSummary GetRequestStatusCodeSummary(IEnumerable<RequestStatusCodeCount> requestStatusCodeCounts)
+        {
+            RequestStatusCodeSummary summary = new RequestStatusCodeSummary();
+            summary.InformationalCount = GroupStatusCodes(requestStatusCodeCounts, 100);
+            summary.SuccessCount = GroupStatusCodes(requestStatusCodeCounts, 200);
+            summary.RedirectionCount = GroupStatusCodes(requestStatusCodeCounts, 300);
+            summary.ClientErrorCount = GroupStatusCodes(requestStatusCodeCounts, 400);
+            summary.ServerErrorCount = GroupStatusCodes(requestStatusCodeCounts, 500);
+            return summary;
+        }
+
+        private long GroupStatusCodes(IEnumerable<RequestStatusCodeCount> requestStatusCodeCounts, int statusCode)
+        {
+            return requestStatusCodeCounts
+                .Where(x => x.StatusCode >= statusCode && x.StatusCode <= (statusCode + 99))
+                .Sum(x => x.TotalCount);
+        }
+
     }
 }
