@@ -44,6 +44,7 @@
                         <li class="active"><a href="#tab-project-overview" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Overview</a></li>
                         <li><a href="#tab-project-files" data-toggle="tab"><i class="fa fa-file"></i>&nbsp;Files</a></li>
                         <li><a href="#tab-loadtimes" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Load Times</a></li>
+                        <li><a href="#tab-servererrors" data-toggle="tab"><i class="fa fa-clock-o"></i>&nbsp;Server Errors</a></li>
                         @if (Model.IsProjectEditor)
                         {
                             <li id="tab-settings-pill"><a href="#tab-settings" data-toggle="tab"><i class="fa fa-cog"></i>&nbsp;Settings</a></li>
@@ -58,6 +59,9 @@
                         </div>
                         <div class="tab-pane fade" id="tab-loadtimes">
                             @Html.Partial("_ProjectLoadTimeTab")
+                        </div>
+                        <div class="tab-pane fade" id="tab-servererrors">
+                            @Html.Partial("_ProjectServerErrorTab")
                         </div>
                         @if (Model.IsProjectEditor)
                         {

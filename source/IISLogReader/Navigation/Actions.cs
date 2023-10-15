@@ -164,6 +164,22 @@ namespace IISLogReader.Navigation
                 return Actions.Project.View(projectId.ToString());
             }
 
+            public static string ErrorsByAggregate()
+            {
+                return "/project/{projectId}/errors";
+            }
+
+            public static string ErrorsByAggregate(string projectId)
+            {
+                return Actions.Project.ErrorsByAggregate().Replace("{projectId}", projectId);
+            }
+
+            public static string ErrorsByAggregate(int projectId)
+            {
+                return Actions.Project.ErrorsByAggregate(projectId.ToString());
+            }
+
+
             public static string Files()
             {
                 return "/project/{projectId}/files";

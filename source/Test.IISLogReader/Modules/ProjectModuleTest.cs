@@ -277,6 +277,50 @@ namespace Test.IISLogReader.Modules
 
         #endregion
 
+        #region ErrorsByAggregate
+
+        [TestCase("abc")]
+        [TestCase("111abc")]
+        public void ErrorsByAggregate_InvalidProjectId_Returns400(string projectId)
+        {
+            // setup
+
+            // execute
+            var url = Actions.Project.ErrorsByAggregate(projectId);
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            _requestRepo.DidNotReceive().GetServerErrorStatusCodeSummaryAsync(Arg.Any<int>());
+
+        }
+
+        [Test]
+        public void Errors_ValidProjectId_GetsAggregatedErrors()
+        {
+            int projectId = new Random().Next(1, 1000);
+
+            // setup
+            RequestStatusCodeCount request500 = CreateRequestStatusCodeSummary("/uri1", 500);
+            RequestStatusCodeCount request501 = CreateRequestStatusCodeSummary("/uri1", 501);
+            _requestRepo.GetServerErrorStatusCodeSummaryAsync(projectId).Returns(new List<RequestStatusCodeCount>() { request500, request501 });
+
+            // execute
+            var url = Actions.Project.ErrorsByAggregate(projectId);
+            var response = ExecuteGet(url);
+
+            // assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            _requestRepo.Received(1).GetServerErrorStatusCodeSummaryAsync(projectId);
+
+            IEnumerable<RequestStatusCodeCount> result = JsonConvert.DeserializeObject<IEnumerable<RequestStatusCodeCount>>(response.Body.AsString());
+            Assert.AreEqual(request500.TotalCount, result.Single(x => x.StatusCode == 500).TotalCount);
+            Assert.AreEqual(request501.TotalCount, result.Single(x => x.StatusCode == 501).TotalCount);
+
+        }
+
+        #endregion
+
         #region Files
 
         [TestCase("abc")]
@@ -1032,6 +1076,21 @@ namespace Test.IISLogReader.Modules
             return response;
 
         }
+
+
+        #region Private Methods
+
+        private RequestStatusCodeCount CreateRequestStatusCodeSummary(string uriStemAggregate, int statusCode)
+        {
+            return new RequestStatusCodeCount()
+            {
+                UriStemAggregate = uriStemAggregate,
+                StatusCode = statusCode,
+                TotalCount = new Random().Next(10, 1000)
+            };
+        }
+
+        #endregion
 
         #endregion
 

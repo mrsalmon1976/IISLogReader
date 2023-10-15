@@ -11,5 +11,7 @@ namespace IISLogReader.BLL.Models
         public int StatusCode { get; set;}
 
         public long TotalCount { get; set; }
+
+        public string UriStemAggregate { get; set; } 
     }
 }

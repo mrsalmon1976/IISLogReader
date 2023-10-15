@@ -20,6 +20,9 @@ namespace IISLogReader.BLL.Repositories
         Task<long> GetTotalRequestCountAsync(int projectId);
 
         Task<IEnumerable<RequestStatusCodeCount>> GetStatusCodeSummaryAsync(int projectId);
+
+        Task<IEnumerable<RequestStatusCodeCount>> GetServerErrorStatusCodeSummaryAsync(int projectId);
+
     }
 
     public class RequestRepository :IRequestRepository
@@ -82,6 +85,21 @@ namespace IISLogReader.BLL.Repositories
                 INNER JOIN LogFiles lf on r.LogFileId = lf.Id
                 WHERE lf.ProjectId = @ProjectId
                 GROUP BY r.ProtocolStatus";
+            return await _dbContext.QueryAsync<RequestStatusCodeCount>(sql, new { ProjectId = projectId });
+        }
+
+        public async Task<IEnumerable<RequestStatusCodeCount>> GetServerErrorStatusCodeSummaryAsync(int projectId)
+        {
+            const string sql = @"SELECT r.ProtocolStatus AS StatusCode
+	                , r.UriStemAggregate
+                    , COUNT(r.Id) AS TotalCount
+                FROM Requests r
+                INNER JOIN LogFiles lf on r.LogFileId = lf.Id
+                WHERE lf.ProjectId = @ProjectId
+				AND r.ProtocolStatus >= 500
+                AND r.UriStemAggregate IS NOT NULL
+				GROUP BY r.ProtocolStatus, r.UriStemAggregate
+				ORDER BY TotalCount DESC";
             return await _dbContext.QueryAsync<RequestStatusCodeCount>(sql, new { ProjectId = projectId });
         }
 

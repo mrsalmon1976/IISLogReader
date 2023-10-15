@@ -5,15 +5,12 @@ using IISLogReader.BLL.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using IISLogReader.BLL.Repositories;
 using IISLogReader.BLL.Data;
 using IISLogReader.BLL.Commands;
 using Test.IISLogReader.TestAssets;
 using Tx.Windows;
-using IISLogReader.BLL.Services;
 
 namespace Test.IISLogReader.BLL.Repositories
 {
@@ -255,7 +252,7 @@ namespace Test.IISLogReader.BLL.Repositories
         }
 
         /// <summary>
-        /// Tests that the GetPageLoadTimes loads correct averages
+        /// Tests that the GetStatusCodeSummaryAsync loads correct averages
         /// </summary>
         [Test]
         public void GetStatusCodeSummaryAsync_Integration_ReturnsData()
@@ -319,6 +316,62 @@ namespace Test.IISLogReader.BLL.Repositories
 
         }
 
+        /// <summary>
+        /// Tests that the GetServerErrorStatusCodeSummaryAsync loads correct averages
+        /// </summary>
+        [Test]
+        public void GetServerErrorStatusCodeSummaryAsync_Integration_ReturnsData()
+        {
+            Random r = new Random();
+            string filePath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName() + ".dbtest");
+
+            ProjectModel firstProject = DataHelper.CreateProjectModel(1);
+            long requests500 = r.Next(10, 200);
+            long requests501 = r.Next(10, 200);
+            List<W3CEvent> firstProjectEvents = CreateW3CEvents(requests500, 500, "/500errorp1");
+            firstProjectEvents.AddRange(CreateW3CEvents(requests501, 501, "/501errorp1"));
+
+            ProjectModel secondProject = DataHelper.CreateProjectModel(5);
+            long secondProjectRequestCount = r.Next(10, 100);
+            List<W3CEvent> secondProjectEvents = CreateW3CEvents(secondProjectRequestCount, 500, "/500errorp2");
+
+            using (SQLiteDbContext dbContext = new SQLiteDbContext(filePath))
+            {
+                dbContext.Initialise();
+                dbContext.BeginTransaction();
+
+                ICreateRequestBatchCommand createRequestBatchCommand = new CreateRequestBatchCommand(dbContext, new RequestValidator());
+                IRequestRepository requestRepo = new RequestRepository(dbContext);
+
+                // create the projects
+                DataHelper.InsertProjectModel(dbContext, firstProject);
+                DataHelper.InsertProjectModel(dbContext, secondProject);
+
+                // create the log file records
+                LogFileModel firstLogFile = DataHelper.CreateLogFileModel(firstProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, firstLogFile);
+                LogFileModel secondLogFile = DataHelper.CreateLogFileModel(secondProject.Id);
+                DataHelper.InsertLogFileModel(dbContext, secondLogFile);
+
+                // create the requests
+                createRequestBatchCommand.Execute(firstLogFile.Id, firstProjectEvents);
+                createRequestBatchCommand.Execute(secondLogFile.Id, secondProjectEvents);
+
+                IEnumerable<RequestStatusCodeCount> result = requestRepo.GetServerErrorStatusCodeSummaryAsync(firstProject.Id).Result;
+
+                Assert.That(result.Count(), Is.EqualTo(2));
+
+                var expectedSummary = result.SingleOrDefault(x => x.StatusCode == 500);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests500));
+
+                expectedSummary = result.SingleOrDefault(x => x.StatusCode == 501);
+                Assert.That(expectedSummary.TotalCount, Is.EqualTo(requests501));
+
+
+            }
+
+        }
+
 
         private W3CEvent CreateW3CEvent(string uriStem, int timeTaken, int statusCode = 200)
         {
@@ -329,13 +382,14 @@ namespace Test.IISLogReader.BLL.Repositories
             return evt;
         }
 
-        private List<W3CEvent> CreateW3CEvents(long count, int statusCode = 200)
+        private List<W3CEvent> CreateW3CEvents(long count, int statusCode = 200, string uriStem = null)
         {
             List<W3CEvent> events = new List<W3CEvent>();
             Random r = new Random();
+            uriStem = uriStem ?? Guid.NewGuid().ToString();
             for (int i=0; i < count; i++)
             {
-                events.Add(CreateW3CEvent(Guid.NewGuid().ToString(), r.Next(1, 10000), statusCode));
+                events.Add(CreateW3CEvent(uriStem, r.Next(1, 10000), statusCode));
             }
             return events;
         }

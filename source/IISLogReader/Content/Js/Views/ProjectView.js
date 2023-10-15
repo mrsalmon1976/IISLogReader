@@ -154,6 +154,44 @@ $(document).ready(function () {
 
                 });
             },
+
+            initaliseServerErrorsGrid: function (projectId) {
+                var that = this;
+                $("#grid-project-server-errors").jsGrid({
+                    width: "100%",
+                    height: "440px",
+                    sorting: true,
+                    paging: true,
+                    autoload: false,
+
+                    controller: {
+                        loadData: function () {
+                            var d = $.Deferred();
+                            $.ajax({
+                                url: "/project/" + projectId + "/errors",
+                                method: 'GET',
+                                dataType: "json"
+                            }).done(function (response) {
+                                d.resolve(response);
+                            });
+
+                            return d.promise();
+                        }
+                    },
+                    loadIndicator: Utils.loadIndicator,
+                    fields: [
+                        {
+                            name: "uriStemAggregate", title: "URI Stem",
+                            itemTemplate: function (value) {
+                                return '<a href="/project/' + that.projectId + '/requests?uri=' + encodeURIComponent(value) + '">' + value + '</a>';
+                            }
+                        },
+                        { name: "statusCode", title: "Status Code", type: "number", width: 50 },
+                        { name: "totalCount", title: "Error Count", type: "number", width: 50 }
+                    ]
+                });
+            },
+
             initaliseSettingsAggregatesGrid: function (projectId) {
                 var that = this;
                 $("#grid-settings-aggregates").jsGrid({
@@ -360,6 +398,7 @@ $(document).ready(function () {
                 this.loadOverview();
                 $("#grid-project-files").jsGrid("loadData");
                 $("#grid-project-load-times").jsGrid("loadData");
+                $("#grid-project-server-errors").jsGrid("loadData");
                 $("#grid-settings-aggregates").jsGrid("loadData");
             }
         },
@@ -389,6 +428,7 @@ $(document).ready(function () {
             this.initialiseDropzone();
             this.initaliseProjectFileGrid(this.projectId);
             this.initaliseAvgLoadTimesGrid(this.projectId);
+            this.initaliseServerErrorsGrid(this.projectId);
             this.initaliseSettingsAggregatesGrid(this.projectId);
             this.initTabRefreshHandlers();
             this.reloadAll();
